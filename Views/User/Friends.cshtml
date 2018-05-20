@@ -1,0 +1,77 @@
+﻿@model IEnumerable<NRAKO_IvanCicek.Models.UserFriend>
+
+@{
+    ViewBag.Title = "Prijatelji";
+}
+<h2>Prijatelji</h2>
+@if (Model != null && Model.Count() > 0)
+{
+    <div class="panel panel-primary">
+        @foreach (var FriendRequest in Model)
+        {
+            <div class="panel-body">
+                @if (FriendRequest.RequestAccepted)
+                {
+                    @Html.ActionLink(FriendRequest.Friend.Fullname, "Index", "User", new { id = FriendRequest.Friend.UserId }, null)
+                }
+                else if (FriendRequest.RequestSent)
+                {
+                    @Html.ActionLink(FriendRequest.Friend.Fullname, "Index", "User", new { id = FriendRequest.Friend.UserId }, null) <span class="label label-info">Zahtjev poslan</span>
+                }
+                else
+                {
+                    @Html.ActionLink(FriendRequest.Friend.Fullname, "Index", "User", new { id = FriendRequest.Friend.UserId }, null) 
+                    <button onclick="ConfirmFriendRequest('@FriendRequest.UserFriendId')" class="clickable btn btn-info">Prihvati zahtjev za prijateljstvom</button>
+                    <button onclick="DenyFriendRequest('@FriendRequest.UserFriendId')" class="clickable btn btn-info">Odbi zahtjev za prijateljstvom</button>
+                }
+            </div>
+        }
+    </div>
+}
+<script>
+    function ConfirmFriendRequest(UserFriendId) {
+        $.ajax({
+            url: '@Url.Action("ConfirmFriendRequest", "User")',
+            type: "POST",
+            dataType: 'json',
+            data: {
+                userFriendId: UserFriendId
+            }
+        })
+                .done(function (result) {
+                    if (result.Result == "OK") {
+                        window.location.reload();
+                    }
+                    else {
+                        alert(result.Msg)
+                    }
+
+            })
+            .fail(function (xhr, status, error) {
+                alert(error);
+            });
+    }
+
+    function DenyFriendRequest(UserFriendId) {
+        $.ajax({
+            url: '@Url.Action("DenyFriendRequest", "User")',
+            type: "POST",
+            dataType: 'json',
+            data: {
+                userFriendId: UserFriendId
+            }
+        })
+                .done(function (result) {
+                    if (result.Result == "OK") {
+                        window.location.reload();
+                    }
+                    else {
+                        alert(result.Msg)
+                    }
+
+            })
+            .fail(function (xhr, status, error) {
+                alert(error);
+            });
+    }
+</script>

@@ -1,0 +1,13 @@
+﻿<div id="PostDialog" style="display:none">
+    @using (Ajax.BeginForm("CreatePost", "Post", null, new AjaxOptions { HttpMethod = "POST", OnSuccess = "UserIndexPostAjaxDone", OnFailure = "AjaxError" }, new { id = "Post_AjaxForm" }))
+    {
+        <input type="hidden" name="PostId" id="PostIdAjax" />
+        <input type="hidden" name="Text" id="PostText" />
+        <input type="hidden" name="SharedFromPostId" id="SharedFromPostIdAjax" />
+        <textarea class="HtmlEditor" id="PostHtml"></textarea>
+        @Html.DropDownList("EditVisibility", new SelectList(ViewBag.VisibilityOptions, "Id", "Name"), new { id = "PostVisibility", name = "Visibility" })
+        <br />
+        <input type="button" id="btnPostDialogSubmit" value="Spremi" />
+        <input type="reset" onclick="closePostDialog()" value="Odustani" />
+    }
+</div>

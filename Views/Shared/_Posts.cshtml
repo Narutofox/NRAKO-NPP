@@ -1,0 +1,384 @@
+﻿@model IEnumerable<NRAKO_IvanCicek.Models.UserPost>
+@using NRAKO_IvanCicek.Helpers
+@using NRAKO_IvanCicek.Models.VM;
+@{
+    var login = MySession.Get("LoginUser") as LoginUser;
+}
+
+
+
+<div class="row" id="RecentPosts">
+    @foreach (var Post in Model)
+    {
+        <div class="col-md-12">
+            <div id="Post-@Post.PostId" class="panel panel-primary">
+                <div class="panel-heading" style="height:4em">
+                    @if (Post.SharedFromPostId.HasValue)
+                    {
+                        <span>
+                            <b>@Html.DisplayFor(modelItem => Post.PostUser.Fullname) dijeli objavu od @Html.DisplayFor(modelItem => Post.SharedUser.Fullname)</b>
+                        </span>
+                    }
+                    else
+                    {
+                        <span>
+                            <b>Objava od @Html.DisplayFor(modelItem => Post.PostUser.Fullname)</b>
+                        </span>
+                    }
+                    <div id="Post-@Post.PostId-Options" style="float:right">
+                        @if (login.UserId == Post.IdUser)
+                        {
+                            <span class="clickable btn btn-info" onclick="EditPost('@Post.PostId')">Uredi</span>
+                            <span class="clickable btn btn-info" onclick="DeletePost('@Post.PostId')">Obriši</span>
+                            <span class="clickable btn btn-info" onclick="CommentPost('@Post.PostId')">Komentar</span>
+                        }
+                        else if (Post.CommentsAndLikes.Any(x => x.DoYouLike == true && x.IdUser == login.UserId && x.IdComment.HasValue == false))
+                        {
+                            <span class="clickable btn btn-info" onclick="CommentPost('@Post.PostId')">Komentar</span>
+                            <span class="clickable btn btn-info" onclick="UnlikePost('@Post.PostId')">Ne sviđa mi se</span>
+                            @*<span class="clickable btn btn-info" onclick="SharePost('@Post.PostId')">Podjeli</span>*@
+                        }
+                        else
+                        {
+                            <span class="clickable btn btn-info" onclick="CommentPost('@Post.PostId')">Komentar</span>
+                            <span class="clickable btn btn-info" onclick="LikePost('@Post.PostId')">Sviđa mi se</span>
+                            @*<span class="clickable btn btn-info" onclick="SharePost('@Post.PostId')">Podjeli</span>*@
+                        }
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div id="PostText-@Post.PostId">
+                        @Html.Raw(Post.Text)
+                    </div>
+                    <br />
+                    <div id="EditPost-@Post.PostId" style="display:none">
+                        <form id="Post_AjaxForm-" + @Post.PostId novalidate class="EditPost_AjaxForm">
+                            <input type="hidden" name="PostId" value="@Post.PostId" />
+                            <input type="hidden" name="Text" id="PostEditText-@Post.PostId" />
+                            <input type="hidden" name="SharedFromPostId" id="SharedFromPostIdAjax" value="@Post.SharedFromPostId" />
+                            <textarea class="HtmlEditor" id="PostHtml-@Post.PostId">@Post.Text</textarea>
+                            <div>
+                                @Html.DropDownList("Visibility", new SelectList(ViewBag.VisibilityOptions, "Id", "Name", Post.Visibility), new { id = "PostVisibility-" + Post.PostId, @class = "form-control" })
+                                <input style="display:none" class="CanvasFile form-control" type="file" name="javascriptFile" title="Odaberite javascript datoteku za canvas element " accept=".js" />
+                            </div>
+                            <br />
+                            <input type="submit" class="btn btn-success" value="Spremi" />
+                            <input type="reset" class="btn btn-danger" onclick="closePostDialog('@Post.PostId')" value="Odustani" />
+                        </form>
+                    </div>
+                    <div id="CreateCommentDialog-@Post.PostId" style="display:none">
+                        <label>Komentar</label>
+                        <br />
+                        @using (Ajax.BeginForm("CommentPost", "Post", null, new AjaxOptions { HttpMethod = "POST", OnSuccess = "UserIndexCommentCreateAjaxDone", OnFailure = "AjaxError" },
+                    new { id = "CreateComment_AjaxForm-" + Post.PostId }))
+                        {
+                            <input type="hidden" name="IdPost" value="@Post.PostId" />
+                            <textarea name="Comment" id="CommentText-@Post.PostId" required></textarea>
+                            <br />
+                            <input type="button" class="btn btn-success" value="Spremi" onclick="submitCommentDialog('@Post.PostId')" />
+                            <input type="reset" class="btn btn-danger" onclick="closeCommentDialog('@Post.PostId')" value="Odustani" />
+                        }
+                    </div>
+                    @if (Post.CommentsAndLikes != null && Post.CommentsAndLikes.Any(x => x.DoYouLike == false))
+                    {
+                        <hr />
+                                <a style="margin-bottom:1em" href="#Post-@Post.PostId-Comments" class="btn btn-info" data-toggle="collapse">Prikaži sve komentare</a>
+
+                                <div id="Post-@Post.PostId-Comments" class="collapse">
+                                    @{Html.RenderAction("Comments", "Post", new { CommentsAndLikes = Post.CommentsAndLikes });}
+                                </div>
+                    }
+                    else
+                    {
+                        <a id="Post-@Post.PostId-CommentsLink" style="margin-bottom:1em; display:none" href="#Post-@Post.PostId-Comments" class="btn btn-info" data-toggle="collapse">Prikaži sve komentare</a>
+
+                        <div id="Post-@Post.PostId-Comments" class="collapse">
+
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <hr />
+       }
+</div>
+@if (ViewBag.Scripts != null && ViewBag.Scripts is IEnumerable<string>)
+{
+    foreach (var item in (ViewBag.Scripts as IEnumerable<string>))
+    {
+        <script src="@Url.Content(item)"></script>
+    }
+}
+        <script>
+    $(function () {
+        $("#NewPostAjaxForm").submit(function (evt) {
+            evt.defaultPrevented;
+            $("#NewPostText").val(tinymce.get('NewPostTextHtml').getContent());
+            var formData = new FormData($(this)[0]);
+            $.ajax({
+                url: '@Url.Action("CreatePost","Post")',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                enctype: 'multipart/form-data',
+                processData: false
+            })
+                .done(function (result) {
+                    UserIndexCreatePostAjaxDone(result);
+                })
+                .fail(function (xhr, status, error) {
+                    alert(error);
+                });
+            return false;
+        });
+
+        $(".EditPost_AjaxForm").submit(function (evt) {
+            evt.defaultPrevented;
+            var formData = new FormData($(this)[0]);
+            var postId = formData.get("PostId");
+            var text = tinymce.get('PostHtml-' + postId).getContent();
+            formData.set("Text", text);
+            $.ajax({
+                url: '@Url.Action("EditPost", "Post")',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                enctype: 'multipart/form-data',
+                processData: false
+            })
+                .done(function (result) {
+                    UserIndexPostAjaxDone(result);
+                })
+                .fail(function (xhr, status, error) {
+                    alert(error);
+                });
+            return false;
+        });
+
+    });
+
+    function EditPost(postId) {
+        $("#EditPost-" + postId).show();
+    }
+
+    function DeletePost(postId) {
+        if (confirm("Sigurno želite obrisati objavu?")) {
+            $.ajax({
+            url: '@Url.Action("DeletePost", "Post")',
+            type: "POST",
+            dataType: 'json',
+            data: {
+                postId: postId
+            }
+        })
+                .done(function (result) {
+                    if (result.Result == "OK") {
+                        $("#Post-" + postId).css("display", "none");
+                    }
+                    else {
+                        alert(result.Msg);
+                    }
+
+            })
+            .fail(function (xhr, status, error) {
+                alert(error);
+            });
+        }
+    }
+
+    function DeleteComment(postCommentOrLikeId,postId) {
+        if (confirm("Sigurno želite obrisati komentar?")) {
+            $.ajax({
+            url: '@Url.Action("DeleteCommentOrLike", "Post")',
+            type: "POST",
+            dataType: 'json',
+            data: {
+                postCommentOrLikeId: postCommentOrLikeId
+            }
+        })
+                .done(function (result) {
+                    if (result.Result === "OK") {
+                        $("#Comment-" + postCommentOrLikeId).css("display", "none");
+
+                        $.ajax({
+                                url: '@Url.Action("ChekIfAnyMoreComments", "Post")',
+                                type: "POST",
+                                dataType: 'json',
+                                data: {
+                                    postId: postId
+                                }
+                            })
+                            .done(function (result) {
+                                if (result === false) {
+                                    $("#Post-" + postId + "-CommentsLink").css("display", "none");
+                                 }
+                            })
+                            .fail(function (xhr, status, error) {
+                                alert(error);
+                            });
+                    }
+                    else {
+                        alert(result.Msg);
+                    }
+
+            })
+            .fail(function (xhr, status, error) {
+                alert(error);
+            });
+        }
+    }
+
+    function CommentPost(postId) {
+        $("#CreateCommentDialog-" + postId).show();
+    }
+
+    function EditComment(postCommentOrLikeId) {
+        $("#EditCommentDialog-" + postCommentOrLikeId).show();
+    }
+
+    function closeEditCommentDialog(postCommentOrLikeId) {
+        $("#EditCommentDialog-" + postCommentOrLikeId).hide();
+    }
+
+    function closeCommentDialog(postId) {
+        $("#CreateCommentDialog-" + postId).hide();
+    }
+
+    function closePostDialog(postId) {
+        $("#EditPost-" + postId).hide();
+        $(".CanvasFile").hide();
+    }
+
+    //function postDialogSubmit(postId) {
+
+    //    var text = tinymce.get('PostHtml-' + postId).getContent();
+    //    $("#PostEditText-" + postId).val(text);
+
+    //    $("#Post_AjaxForm-" + postId).submit();
+    //}
+
+    function submitCommentDialog(postId) {
+        $("#CreateComment_AjaxForm-" + postId).submit();
+    }
+
+    function submitEditCommentDialog(postCommentOrLikeId) {
+        $("#EditComment_AjaxForm-" + postCommentOrLikeId).submit();
+    }
+
+    function UserIndexCommentCreateAjaxDone(response) {
+        if (response.Result == "OK") {
+            $("#CreateCommentDialog-" + response.PostId).hide();
+            $("#CommentText-" + response.PostId).text("");
+            $("#CommentText-" + response.PostId).val("");
+            $("#Post-" + response.PostId + "-CommentsLink").show();
+            $("#Post-" + response.PostId + "-Comments").empty();
+            $("#Post-" + response.PostId + "-Comments").load('@Url.Action("PostComments", "Post")' + "?postId=" + response.PostId);
+        }
+        else {
+            alert(response.Msg)
+        }
+
+    }
+
+    function UserIndexCommentEditAjaxDone(response) {
+        if (response.Result == "OK") {
+            $("#Post-" + response.PostId + "-CommentsLink").show();
+            $("#Post-" + response.PostId + "-Comments").empty();
+            $("#Post-" + response.PostId + "-Comments").load('@Url.Action("PostComments", "Post")' + "?postId=" + response.PostId);
+        }
+        else {
+            alert(response.Msg)
+        }
+    }
+
+
+    function UserIndexCreatePostAjaxDone(response) {
+        if (response.Result == "OK") {
+            if (response.PostId != null && response.PostId != undefined) {
+                AppendNewPost(response.PostId);
+            }
+            else if (response.Msg != null && response.Msg != undefined) {
+                alert(response.Msg);
+            }
+
+            tinymce.get('NewPostTextHtml').setContent("")
+            $(".CanvasFile").hide();
+            $(".CanvasFile").val('');
+        }
+        else {
+            alert(response.Msg)
+        }
+    }
+
+    function UserIndexPostAjaxDone(response) {
+        if (response.Result == "OK") {
+            var SharedFromPostId = $("#SharedFromPostIdAjax").val();
+            if (response.Msg != null && response.Msg != undefined) {
+                alert(response.Msg);
+                window.location.reload();
+                //$("#Post-" + response.postId).css("display", "none");
+            }
+
+            else if ((SharedFromPostId == null || SharedFromPostId == undefined || SharedFromPostId <= 0) && response.PostId != null && response.PostId != undefined) {
+                window.location.reload();
+            }
+
+            closePostDialog(response.PostId);
+        }
+        else {
+            alert(response.Msg)
+        }
+    }
+
+    function AppendNewPost(postId) {
+        $("<div>").load('@Url.Action("AddNewPost", "Post")' + "?postId=" + postId, function (data) {
+            $("#RecentPosts").prepend(data);
+        });
+    }
+
+    function LikePost(postId) {
+      $.ajax({
+            url: '@Url.Action("Like", "Post")',
+            type: "POST",
+            dataType: 'json',
+            data: {
+                IdPost: postId
+            }
+        })
+                .done(function (result) {
+                    if (result.Result == "OK") {
+                        window.location.reload();
+                    }
+                    else {
+                        alert(result.Msg)
+                    }
+
+            })
+            .fail(function (xhr, status, error) {
+                alert(error);
+            });
+    }
+
+    function UnlikePost(postId) {
+      $.ajax({
+            url: '@Url.Action("Unlike", "Post")',
+            type: "POST",
+            dataType: 'json',
+            data: {
+                postId: postId
+            }
+        })
+                .done(function (result) {
+                    if (result.Result == "OK") {
+                        window.location.reload();
+                    }
+                    else {
+                        alert(result.Msg)
+                    }
+            })
+            .fail(function (xhr, status, error) {
+                alert(error);
+            });
+    }
+
+        </script>

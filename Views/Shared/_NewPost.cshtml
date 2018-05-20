@@ -1,0 +1,17 @@
+﻿<h3>Nova objava</h3>
+<div class="row" id="NewPost">
+    <div class="col-md-12">
+        <form id="NewPostAjaxForm" name="myform" novalidate>
+            <input type="hidden" name="Text" id="NewPostText" />
+            <textarea class="HtmlEditor" id="NewPostTextHtml" required style="height:200px"></textarea>
+            <div style="overflow:hidden;margin-top:1em">
+                <div style="float:left">@Html.DropDownList("Visibility", new SelectList(ViewBag.VisibilityOptions, "Id", "Name"), new { @class = "form-control" })</div>
+                <div class="col-md-10 CanvasFile" style="display:none">
+                    <input id="NewPostCanvasFile" class="form-control" type="file" name="javascriptFile" title="Odaberite javascript datoteku za canvas element " accept=".js" />
+                </div>
+                <div style="float:left; margin-left:1em"><input class="btn btn-success" type="submit" value="Spremi" id="btnSaveNewPost" /> </div>
+            </div>
+        </form>
+    </div>
+</div>
+

@@ -1,0 +1,91 @@
+﻿@model NRAKO_IvanCicek.Models.User
+
+@{
+    ViewBag.Title = "Postavke";
+}
+<style>
+    .checkboxes label {
+        float:left;
+    }
+    .checkboxes input[type="checkbox"] {
+        float: left;
+        width: unset;
+        margin-left: 1em;
+        height: 20px;
+        margin-top: 0px;
+    }
+</style>
+
+@using (Html.BeginForm("UpdateData", "Settings", FormMethod.Post, new { enctype = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+    
+    <div class="form-horizontal">
+        <h4>Postavke</h4>
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        @Html.HiddenFor(model => model.ProfileImagePath)
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.FirstName, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.FirstName, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.FirstName, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.LastName, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.LastName, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.LastName, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Email, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Email, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Email, "", new { @class = "text-danger" })
+            </div>
+        </div>       
+        <div class="form-group">
+            <label class="control-label col-md-2">Odaberite novu sliku profila</label>
+            <div class="col-md-10">
+                <input class="form-control" type="file" name="profileImage" title="Odaberite sliku" accept=".jpg,.jpeg,.png" />
+            </div>
+        </div>
+        <div class="form-group checkboxes">           
+            <div class="col-md-4">
+                <label for="Following">Dopusti da me drugi ljudi slijede</label>
+                <input id="Following" class="form-control" name="AllowFollowing" value="@ViewBag.UserSettings.AllowFollowing.ToString()" type="checkbox"/>
+            </div>
+
+
+            <div class="col-md-4">
+                <label for="ShowEmail">Prikaži email javno</label>
+                <input id="ShowEmail" class="form-control" name="ShowEmail" value="@ViewBag.UserSettings.ShowEmail.ToString()" type="checkbox" />
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Spremi" class="btn btn-default" />
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+<script>
+    $(function () {
+        if ('@ViewBag.UserSettings.AllowFollowing'.toLowerCase() == 'true') {
+            $("#Following").prop('checked', true);
+        }
+
+        if ('@ViewBag.UserSettings.ShowEmail'.toLowerCase() == 'true') {
+            $("#ShowEmail").prop('checked', true);
+        }
+    });
+</script>

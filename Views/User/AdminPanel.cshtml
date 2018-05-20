@@ -1,0 +1,68 @@
+﻿@model IEnumerable<NRAKO_IvanCicek.Models.UserPost>
+
+@{
+    ViewBag.Title = "Admin Panel";
+}
+<script src="~/Content/tinymce/tinymce.min.js"></script>
+<script src="~/Content/tinymce/tinymceFonts.js"></script>
+<script src="~/Scripts/htmlEditor.js" data-culture="@System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName"></script>
+
+@foreach (var Post in Model)
+{
+        <div id="@Post.PostId" class="panel panel-primary">
+            <div class="panel-body">
+                <textarea class="HtmlEditor" style="width:100%">@Post.Canvas</textarea>
+                <br/>
+                <input type="button" class="btn btn-success" onclick="Accept('@Post.PostId')" value="Prihvati" />
+                <input type="button" class="btn btn-danger" onclick="Deny('@Post.PostId')" value="Odbij" />
+            </div>
+        </div>   
+}
+
+<script>
+    function Accept(postId) {
+        $.ajax({
+            url: '@Url.Action("AcceptPost", "Post")',
+            type: "POST",
+            dataType: 'json',
+            data: {
+                postId: postId
+            }
+        })
+        .done(function (result) {
+                if (result.Result == "OK") {
+                    $("#" + postId).css("display", "none");
+                }
+                else {
+                    alert(result.Msg)
+                }
+
+        })
+        .fail(function (xhr, status, error) {
+            alert(error);
+        });
+    }
+
+    function Deny(postId) {
+         $.ajax({
+            url: '@Url.Action("DenyPost", "Post")',
+            type: "POST",
+            dataType: 'json',
+            data: {
+                postId: postId
+            }
+        })
+        .done(function (result) {
+                if (result.Result == "OK") {
+                    $("#" + postId).css("display", "none");
+                }
+                else {
+                    alert(result.Msg)
+                }
+
+        })
+        .fail(function (xhr, status, error) {
+            alert(error);
+        });
+    }
+</script>

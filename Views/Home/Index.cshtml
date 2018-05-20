@@ -1,0 +1,11 @@
+﻿@{
+    ViewBag.Title = "Home";
+}
+<script src="~/Content/tinymce/tinymce.min.js"></script>
+<script src="~/Content/tinymce/tinymceFonts.js"></script>
+<script src="~/Scripts/htmlEditor.js" data-culture="@System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName"></script>
+
+@{Html.RenderPartial("_NewPost");}
+<br />
+<h3>Nedavne objave</h3>
+@{Html.RenderAction("GetNews", "Post");}

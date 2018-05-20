@@ -1,0 +1,127 @@
+﻿@using NRAKO_IvanCicek.Helpers
+@using NRAKO_IvanCicek.Models.VM;
+@{
+    var LoginUser = MySession.Get("LoginUser");
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - NRAKO</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+
+    <link href="~/Content/TextComplete.css" rel="stylesheet" />
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/jqueryval")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+    <script src="~/Scripts/jquery.textcomplete.js"></script>
+    <script>
+        $(function () {
+            $("#userSearch").textcomplete([
+                {
+                    id: 'users',
+                    match: /(.{3,})/,
+                    search: function (term, callback) {
+                        $.ajax({
+                            url: '@Url.Action("UserSearch", "User")',
+                            data: { fullName: term },
+                            type: 'POST',
+                            dataType: 'json'
+                        })
+                            .done(function (result) {
+                                callback($.map(result, function (word) {
+                                    return word;
+                                }));
+                            })
+                            .fail(function () {
+                                callback([]);
+                            });
+                    },
+                    index: 1,
+                    template: function (word) {
+                        var fullName = word.FirstName + " " + word.LastName;
+                        var item = '<span style="font-weight:bold;">' + fullName + '</span><br/>';
+                        return item;
+
+                    },
+                    replace: function (word) {
+                        window.document.location = "/User/Index/" + word.UserId;
+                    }
+                }
+            ]);
+        });
+    </script>
+</head>
+<body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            @if (LoginUser != null)
+            {
+                @Html.ActionLink("NRAKO", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
+            }
+            else
+            {
+                <span class="navbar-brand">NRAKO</span>
+            }
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                @if (LoginUser != null)
+                {
+                    <li>@Html.ActionLink("Novosti", "Index", "Home")</li>
+                    <li>@Html.ActionLink("Prijatelji", "Friends", "User")</li>
+                    <li>
+                         <input style="margin-top:8px; width:20em" type="text" class="form-control" id="userSearch">
+                    </li>
+                    
+                }
+                </ul>
+
+                @if (LoginUser == null)
+                {
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>@Html.ActionLink("Prijava", "Index", "Login")</li>
+                        <li>@Html.ActionLink("Registracija", "Index", "SignUp")</li>
+                    </ul>
+                }
+                else
+                {
+                    <ul class="nav navbar-nav navbar-right">
+                        @if ((LoginUser as LoginUser).UserTypeId == (int)UserType.Admin)
+                        {
+                            <li>@Html.ActionLink("Admin panel", "AdminPanel", "User")</li>
+                        }
+                        <li>@Html.ActionLink("Moj profil", "Index", "User",new { id = (LoginUser as LoginUser).UserId },null)</li>
+                        <li>@Html.ActionLink("Postavke", "Index", "Settings")</li>
+                        <li>@Html.ActionLink("Odjava", "Logoff", "Login")</li>
+                    </ul>
+                }
+
+            </div>
+        </div>
+    </div>
+    <div class="container body-content">
+        @Html.Partial("_Notification")
+        @RenderBody()
+        <hr />
+
+        <blockquote>
+            <footer>
+                <span>&copy; @DateTime.Now.Year - NPP Ivan Čiček</span>
+            </footer>
+        </blockquote>
+
+    </div>
+
+</body>
+</html>

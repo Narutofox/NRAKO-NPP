@@ -1,0 +1,33 @@
+﻿@using NRAKO_IvanCicek.Models
+
+@if (TempData["notification"] != null && TempData["notification"] is Notification)
+{
+    var notification = (Notification)TempData["notification"];
+    <div class="@notification.Class" id="notification">
+        @notification.Text
+    </div>
+    <script>
+        $(function () {
+            var text = '@notification.Text';
+
+            if (text.length <= 50) {
+                $("#notification").delay(3500).hide("blind", { direction: "up" }, 1500);
+            }
+            else if (text.length <= 100) {
+                $("#notification").delay(4500).hide("blind", { direction: "up" }, 1500);
+            }
+            else if (text.length > 100) {
+                $("#notification").delay(5500).hide("blind", { direction: "up" }, 2000);
+            }
+            else {
+                $("#notification").delay(2500).hide("blind", { direction: "up" }, 1500);
+
+            }
+        });
+    </script>
+}
+else
+{
+    <div id="notification" style="display:none">
+    </div>
+}

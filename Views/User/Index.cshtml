@@ -1,0 +1,197 @@
+﻿@model NRAKO_IvanCicek.Models.UserProfile
+@using NRAKO_IvanCicek.Helpers
+@using NRAKO_IvanCicek.Models.VM;
+@{
+    ViewBag.Title = Model.Fullname;
+    var login = MySession.Get("LoginUser") as LoginUser;
+}
+<script src="~/Content/tinymce/tinymce.min.js"></script>
+<script src="~/Content/tinymce/tinymceFonts.js"></script>
+<script src="~/Scripts/htmlEditor.js" data-culture="@System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName"></script>
+<div class="row" style="margin-top:1em">
+    <div class="col-md-2">
+        @if (!String.IsNullOrEmpty(Model.ProfileImagePath))
+        {
+            <img class="profilePic img img-circle"
+                 src="@Url.Content(Model.ProfileImagePath)">
+        }
+    </div>
+    <div class="col-md-5">
+        <h1 class="display-4" style="margin-top:1.5em"><b>@Model.Fullname</b></h1>
+        @if (login.UserId != Model.UserId && Model.IsBlocked == false)
+        {
+            if (Model.AreFriends)
+            {
+                <span class="clickable btn btn-info" id="btnRemoveFriend" onclick="RemoveFriend('@Model.UserId')">Ukloni sa liste prijatelja</span>
+            }
+            else if (Model.FriendRequestSend)
+            {
+                <span class="label label-info" >Zahtjev za prijateljstvo je poslan</span>
+            }
+            else
+            {
+                
+                if (Model.IsBlocking)
+                {
+                    <span class="clickable btn btn-info" id="btnUnblockUser" onclick="UnblockUser('@Model.UserId')">Odblokiraj osobu</span>
+                }
+                else
+                {
+                    <span class="clickable btn btn-info" id="btnSendFriendRequest" onclick="SendFriendRequest('@Model.UserId')">Pošalji zahtjev za prijateljstvo</span>
+                    <span class="clickable btn btn-info" id="btnBlockUser" onclick="BlockUser('@Model.UserId')">Blokiraj osobu</span>
+                }
+            }
+
+            if (Model.AllowFollowing && Model.IsFollowing == false)
+            {
+                <span class="clickable btn btn-info" id="btnFollowUser" onclick="FollowUser('@Model.UserId')">Prati me</span>
+            }
+            else if (Model.IsFollowing)
+            {
+                <span class="clickable btn btn-info" id="btnStopFollowingUser" onclick="StopFollowingUser('@Model.UserId')">Prestani pratiti</span>
+            }
+        }
+    </div>
+</div>
+<br />
+@if (login.UserId == Model.UserId)
+{
+    Html.RenderPartial("_NewPost");
+}
+<br />
+<h3>Nedavne objave</h3>
+@{Html.RenderAction("GetUserPosts", "Post",new {userId = Model.UserId });}
+
+<script>
+    function RemoveFriend(userId) {
+        $.ajax({
+            url: '@Url.Action("RemoveFriend", "User")',
+            type: "POST",
+            dataType: 'json',
+            data: {
+                userId: userId
+            }
+        })
+        .done(function (result) {
+            if (result.Result == "OK") {
+                window.location.reload();
+                }
+                else {
+                    alert(result.Msg)
+                }
+        })
+        .fail(function (xhr, status, error) {
+            alert(error);
+        });
+    }
+
+    function SendFriendRequest(userId) {
+        $.ajax({
+            url: '@Url.Action("SendFriendRequest", "User")',
+            type: "POST",
+            dataType: 'json',
+            data: {
+                userId: userId
+            }
+        })
+        .done(function (result) {
+            if (result.Result == "OK") {
+                window.location.reload();
+                }
+                else {
+                    alert(result.Msg)
+                }
+        })
+        .fail(function (xhr, status, error) {
+            alert(error);
+        });
+    }
+
+    function BlockUser(userId) {
+        $.ajax({
+            url: '@Url.Action("BlockUser", "User")',
+            type: "POST",
+            dataType: 'json',
+            data: {
+                userId: userId
+            }
+        })
+        .done(function (result) {
+            if (result.Result == "OK") {
+                window.location.reload();
+                }
+                else {
+                    alert(result.Msg)
+                }
+        })
+        .fail(function (xhr, status, error) {
+            alert(error);
+        });
+    }
+
+    function UnblockUser(userId) {
+        $.ajax({
+            url: '@Url.Action("UnblockUser", "User")',
+            type: "POST",
+            dataType: 'json',
+            data: {
+                userId: userId
+            }
+        })
+        .done(function (result) {
+            if (result.Result == "OK") {
+                window.location.reload();
+                }
+                else {
+                    alert(result.Msg)
+                }
+        })
+        .fail(function (xhr, status, error) {
+            alert(error);
+        });
+    }
+
+    function FollowUser(userId) {
+        $.ajax({
+            url: '@Url.Action("FollowUser", "User")',
+            type: "POST",
+            dataType: 'json',
+            data: {
+                userId: userId
+            }
+        })
+        .done(function (result) {
+            if (result.Result == "OK") {
+                window.location.reload();
+                }
+                else {
+                    alert(result.Msg)
+                }
+        })
+        .fail(function (xhr, status, error) {
+            alert(error);
+        });
+    }
+
+    function StopFollowingUser(userId) {
+        $.ajax({
+            url: '@Url.Action("StopFollowingUser", "User")',
+            type: "POST",
+            dataType: 'json',
+            data: {
+                userId: userId
+            }
+        })
+        .done(function (result) {
+            if (result.Result == "OK") {
+                window.location.reload();
+                }
+                else {
+                    alert(result.Msg)
+                }
+        })
+        .fail(function (xhr, status, error) {
+            alert(error);
+        });
+    }
+</script>

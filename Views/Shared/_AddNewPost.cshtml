@@ -1,0 +1,83 @@
+﻿@model NRAKO_IvanCicek.Models.UserPost
+@using NRAKO_IvanCicek.Helpers
+@using NRAKO_IvanCicek.Models.VM;
+@{
+    var login = MySession.Get("LoginUser") as LoginUser;
+}
+@if (Model != null)
+{
+    <script src="~/Scripts/htmlEditor.js" data-culture="@System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName"></script>
+    <div class="col-md-12">
+        <div id="Post-@Model.PostId" class=" panel panel-primary">
+            <div class="panel-heading" style="height:4em">
+                @if (Model.SharedFromPostId.HasValue)
+                {
+                    <span>
+                        <b>@Html.DisplayFor(modelItem => Model.PostUser.Fullname) dijeli objavu od @Html.DisplayFor(modelItem => Model.SharedUser.Fullname)</b>
+                    </span>
+                }
+                else
+                {
+                    <span>
+                        <b>Objava od @Html.DisplayFor(modelItem => Model.PostUser.Fullname)</b>
+                    </span>
+                }
+                <div id="Post-@Model.PostId-Options" style="float:right">
+                    @if (login.UserId == Model.IdUser)
+                    {
+                        <span class="clickable btn btn-info" onclick="EditPost('@Model.PostId')">Uredi</span>
+                        <span class="clickable btn btn-info" onclick="DeletePost('@Model.PostId')">Obriši</span>
+                                <span class="clickable btn btn-info" onclick="CommentPost('@Model.PostId')">Komentar</span>
+                    }
+                    else if (Model.CommentsAndLikes.Any(x => x.DoYouLike == true && x.IdUser == login.UserId && x.IdComment.HasValue == false))
+                    {
+                        <span class="clickable btn btn-info" onclick="CommentPost('@Model.PostId')">Komentar</span>
+                        <span class="clickable btn btn-info" onclick="UnlikePost('@Model.PostId')">Ne sviđa mi se</span>
+                                <span class="clickable btn btn-info" onclick="SharePost('@Model.PostId')">Podjeli</span>
+                    }
+                    else
+                    {
+                        <span class="clickable btn btn-info" onclick="CommentPost('@Model.PostId')">Komentar</span>
+                        <span class="clickable btn btn-info" onclick="LikePost('@Model.PostId')">Sviđa mi se</span>
+                                <span class="clickable btn btn-info" onclick="SharePost('@Model.PostId')">Podjeli</span>
+                    }
+                </div>
+            </div>
+            <div class="panel-body">
+                <div id="PostText-@Model.PostId">
+                    @Html.Raw(Model.Text)
+                </div>
+                <br />
+                <div id="EditPost-@Model.PostId" style="display:none">
+                    <form id="Post_AjaxForm-" + @Model.PostId novalidate class="EditPost_AjaxForm">
+                        <input type="hidden" name="PostId" value="@Model.PostId" />
+                        <input type="hidden" name="Text" id="PostEditText-@Model.PostId" />
+                        <input type="hidden" name="SharedFromPostId" id="SharedFromPostIdAjax" value="@Model.SharedFromPostId" />
+                        <textarea class="HtmlEditor" id="PostHtml-@Model.PostId">@Model.Text</textarea>
+                        <div>
+                            @Html.DropDownList("Visibility", new SelectList(ViewBag.VisibilityOptions, "Id", "Name", Model.Visibility), new { id = "PostVisibility-" + Model.PostId, @class = "form-control" })
+                            <input style="display:none" class="CanvasFile form-control" type="file" name="javascriptFile" title="Odaberite javascript datoteku za canvas element " accept=".js" />
+                        </div>
+                        <br />
+                        <input type="button" class="btn btn-success" onclick="postDialogSubmit('@Model.PostId')" value="Spremi" />
+                        <input type="reset" class="btn btn-danger" onclick="closePostDialog('@Model.PostId')" value="Odustani" />
+                    </form>
+                </div>
+                <div id="CreateCommentDialog-@Model.PostId" style="display:none">
+                    <label>Komentar</label>
+                    <br />
+                    @using (Ajax.BeginForm("CommentPost", "Post", null, new AjaxOptions { HttpMethod = "POST", OnSuccess = "UserIndexCommentCreateAjaxDone", OnFailure = "AjaxError" },
+                new { id = "CreateComment_AjaxForm-" + Model.PostId }))
+                    {
+                        <input type="hidden" name="IdPost" value="@Model.PostId" />
+                        <textarea name="Comment" id="CommentText-@Model.PostId" required></textarea>
+                                <br />
+                                <input type="button" class="btn btn-success" value="Spremi" onclick="submitCommentDialog('@Model.PostId')" />
+                                <input type="reset" class="btn btn-danger" onclick="closeCommentDialog('@Model.PostId')" value="Odustani" />
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr />
+}

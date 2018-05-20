@@ -1,0 +1,101 @@
+﻿@model IEnumerable<NRAKO_IvanCicek.Models.PostCommentOrLike>
+@using NRAKO_IvanCicek.Helpers
+@using NRAKO_IvanCicek.Models.VM;
+@{ 
+    var login = MySession.Get("LoginUser") as LoginUser;
+}
+
+
+    @foreach (var Comment in Model.Where(x => x.DoYouLike == false))
+    {
+        <div class="panel panel-primary " id="Comment-@Comment.PostCommentOrLikeId" style="margin-left:10px">
+            <div class="panel-heading">
+                <span>
+                    <b>Komentar od @Html.DisplayFor(modelItem => Comment.UserFullName)</b>
+                </span>
+            </div>
+            <div class="panel-body" style="margin-top:1em;margin-bottom:1em">
+                @Html.DisplayFor(modelItem => Comment.Comment)
+            </div>
+            <div class="panel-footer">
+                @if (login.UserId != Comment.IdUser)
+                        {
+                            if (Model.Any(x => x.DoYouLike && x.IdComment.HasValue && x.IdComment.Value == Comment.PostCommentOrLikeId && x.IdUser == login.UserId))
+                            {
+                                var UnlikeCommentId = Model.Where(x => x.DoYouLike && x.IdComment.HasValue && x.IdComment.Value == Comment.PostCommentOrLikeId && x.IdUser == login.UserId).FirstOrDefault().PostCommentOrLikeId;
+                        <span class="clickable btn btn-info" onclick="UnlikeComment('@UnlikeCommentId')">Ne sviđa mi se</span>
+                    }
+                    else
+                    {
+                        <span class="clickable btn btn-info" onclick="LikeComment('@Comment.PostCommentOrLikeId','@Comment.IdPost')">Sviđa mi se</span>
+                    }
+                }
+                else
+                {
+                    <span class="clickable btn btn-info" onclick="EditComment('@Comment.PostCommentOrLikeId')">Uredi</span>
+                    <span class="clickable btn btn-info" onclick="DeleteComment('@Comment.PostCommentOrLikeId','@Comment.IdPost')">Obriši</span>
+                }
+            </div>
+            <div id="EditCommentDialog-@Comment.PostCommentOrLikeId" style="display:none; margin-left:1em" title="Novi komentar">
+                @using (Ajax.BeginForm("EditCommentPost", "Post", null, new AjaxOptions { HttpMethod = "POST", OnSuccess = "UserIndexCommentEditAjaxDone", OnFailure = "AjaxError" },
+                    new { id = "EditComment_AjaxForm-"+ Comment.PostCommentOrLikeId }))
+                {
+                    <input type="hidden" name="PostCommentOrLikeId" value="@Comment.PostCommentOrLikeId" />
+                    <input type="hidden" name="IdPost" value="@Comment.IdPost" />
+                    <textarea name="Comment" required >@Comment.Comment</textarea>
+                    <br/>
+                    <div style="margin-top:1em; margin-bottom:1em;">
+                        <input type="button" class="btn btn-success" onclick="submitEditCommentDialog('@Comment.PostCommentOrLikeId')" value="Spremi" />
+                        <input type="reset" class="btn btn-danger" onclick="closeEditCommentDialog('@Comment.PostCommentOrLikeId')" value="Odustani" />
+                    </div>        
+                }
+            </div>
+        </div>
+    }
+<script>
+    function LikeComment(commentId,postId) {
+      $.ajax({
+            url: '@Url.Action("Like", "Post")',
+            type: "POST",
+            dataType: 'json',
+            data: {
+                IdComment: commentId,
+                IdPost: postId
+            }
+        })
+                .done(function (result) {
+                    if (result.Result == "OK") {
+                        window.location.reload();
+                    }
+                    else {
+                        alert(result.Msg)
+                    }
+
+            })
+            .fail(function (xhr, status, error) {
+                alert(error);
+            });
+    }
+
+    function UnlikeComment(postCommentOrLikeId) {
+      $.ajax({
+            url: '@Url.Action("DeleteCommentOrLike", "Post")',
+            type: "POST",
+            dataType: 'json',
+            data: {
+                postCommentOrLikeId: postCommentOrLikeId
+            }
+        })
+                .done(function (result) {
+                    if (result.Result == "OK") {
+                        window.location.reload();
+                    }
+                    else {
+                        alert(result.Msg)
+                    }
+            })
+            .fail(function (xhr, status, error) {
+                alert(error);
+            });
+    }
+</script>
