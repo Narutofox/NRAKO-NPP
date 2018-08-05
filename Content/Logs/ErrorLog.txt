@@ -1889,3 +1889,8 @@ StackTrace:    at System.Web.HttpServerUtility.ExecuteInternal(IHttpHandler hand
    at System.Web.Mvc.MvcHandler.System.Web.IHttpAsyncHandler.EndProcessRequest(IAsyncResult result)
    at System.Web.HttpApplication.CallHandlerExecutionStep.System.Web.HttpApplication.IExecutionStep.Execute()
    at System.Web.HttpApplication.ExecuteStep(IExecutionStep step, Boolean& completedSynchronously)
+[ 5.8.2018. 17:06:33 ] 
+InnerException: 
+Source: NRAKO_IvanCicek
+Message: Exception of type 'System.Exception' was thrown.
+StackTrace:    at NRAKO_IvanCicek.Controllers.LoginController.Login(Login login) in C:\Users\Naruto\Documents\Visual Studio 2017\Projects\NRAKO_IvanCicek\NRAKO-NPP\Controllers\LoginController.cs:line 51

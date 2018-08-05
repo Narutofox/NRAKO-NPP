@@ -45,13 +45,10 @@ namespace NRAKO_IvanCicek.Controllers
             LoginUser loginUser = loginDAL.LoginCheck(login);
             if (loginUser != null)
             {
-                //if (!String.IsNullOrEmpty(loginUser.ProfileImagePath))
-                //{
-                //    loginUser.ProfileImagePath = Server.MapPath(loginUser.ProfileImagePath);
-                //}
                 MySession.Set("LoginUser", loginUser);
                 return RedirectToAction("Index", "Home");
             }
+
             TempData["notification"] = new Notification { Text = "Pogrešna email adresa i/ili lozinka", Type = NotificationType.Error };
             return View("Index",login);
         }

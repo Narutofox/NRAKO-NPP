@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+﻿using NRAKO_IvanCicek.Helpers;
+using System;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
+using Metrics;
 
 namespace NRAKO_IvanCicek
 {
@@ -16,6 +15,10 @@ namespace NRAKO_IvanCicek
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
+
+            Metric.Config
+                .WithHttpEndpoint("http://localhost:1234/")
+                .WithAllCounters();
         }
 
         protected void Application_PreSendRequestHeaders()
@@ -29,10 +32,15 @@ namespace NRAKO_IvanCicek
         {
             Exception exc = Server.GetLastError();
             Server.ClearError();
-            Helpers.Logger.Instance.LogException(exc);
+            Logger.Instance.LogException(exc);
             string protocol = "http://";
-            string Url = protocol + Request.Url.Authority + "/" + "Error/Index";
-            Response.Redirect(Url);
+            string url = protocol + Request.Url.Authority + HardcodedValues.ErrorIndexPath;
+            Response.Redirect(url);
+        }
+
+        protected void Application_End()
+        {
+            Metric.Config.Dispose();
         }
     }
 }

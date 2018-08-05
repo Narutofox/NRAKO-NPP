@@ -11,6 +11,6 @@ namespace NRAKO_IvanCicek
         //TODO 1. AOP
         //TODO 2. Unit testovi
         //TODO 3. Clean code
-
+        //TODO RequestMetricsAspect - pitati za pomoc
     }
 }
