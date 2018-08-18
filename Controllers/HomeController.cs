@@ -15,16 +15,12 @@ namespace NRAKO_IvanCicek.Controllers
     [LoginRequiredFilter]
     public class HomeController : Controller
     {
-        IUserDAL userDAL;
-        IPostsRepo _postsRepo;
-        LoginUser LoginUser;
+        public readonly IPostsRepo _postsRepo;
         public HomeController()
         {
-            userDAL = DALFactory.GetUserDAL();
             _postsRepo = DALFactory.GetPostDAL();
-            LoginUser = (LoginUser)MySession.Get("LoginUser");
         }
-        public ActionResult Index()
+        public ViewResult Index()
         {
             ViewBag.VisibilityOptions = _postsRepo.GetVisibilityOptions();
             return View();

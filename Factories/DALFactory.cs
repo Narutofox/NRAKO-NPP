@@ -10,21 +10,6 @@ namespace NRAKO_IvanCicek.Factories
 {
     public static class DALFactory
     {
-        //public static IUserDAL GetUserDAL(Context context)
-        //{
-        //    return UsersDAL.GetInstance(context);
-        //}
-
-        //public static ILoginDAL GetLoginDAL(Context context)
-        //{
-        //    return LoginDAL.GetInstance(context);
-        //}
-
-        //public static IPostsRepo GetPostDAL(Context context)
-        //{
-        //    return PostsRepo.GetInstance(context);
-        //}
-
         public static IUserDAL GetUserDAL(Context context = null)
         {
             return UsersDAL.GetInstance(context);
