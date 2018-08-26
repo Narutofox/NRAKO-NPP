@@ -94,7 +94,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NRAKO-NPP\NPP_IvanCicek.csproj">
+    <ProjectReference Include="..\NPP_IvanCicek.csproj">
       <Project>{2337DDAC-AD19-4247-9444-A6BE75A59345}</Project>
       <Name>NPP_IvanCicek</Name>
     </ProjectReference>

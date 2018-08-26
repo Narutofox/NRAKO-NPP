@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.27428.2037
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NPP_IvanCicek", "NPP_IvanCicek.csproj", "{2337DDAC-AD19-4247-9444-A6BE75A59345}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NPP_UnitTests", "..\NPP_UnitTests\NPP_UnitTests.csproj", "{6FC68290-6FC4-45D1-982C-948B6A14E5E9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NPP_UnitTests", "NPP_UnitTests\NPP_UnitTests.csproj", "{6FC68290-6FC4-45D1-982C-948B6A14E5E9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
