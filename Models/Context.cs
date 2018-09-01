@@ -19,6 +19,10 @@ namespace NRAKO_IvanCicek.Models
         public Context() : base("CS")
         {
 
-        }       
+        }
+
+        public Context(string connectionString) : base(connectionString)
+        {
+        }
     }
 }

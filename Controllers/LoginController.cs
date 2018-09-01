@@ -27,14 +27,19 @@ namespace NRAKO_IvanCicek.Controllers
             }
         }
 
-        ILoginDAL loginDAL;
+        readonly ILoginDAL loginDAL;
         public LoginController()
         {
             loginDAL = DALFactory.GetLoginDAL();
         }
 
+        public LoginController(Context context)
+        {
+            loginDAL = DALFactory.GetLoginDAL(context);
+        }
+
         // GET: Login
-        public ActionResult Index()
+        public ViewResult Index()
         {
             return View();
         }
@@ -57,7 +62,7 @@ namespace NRAKO_IvanCicek.Controllers
         {
             MySession.Set("LoginUser", null);
             TempData["notification"] = new Notification { Text ="Odjava uspješna", Type = NotificationType.Success  };
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", "Home");
         }    
     }
 }

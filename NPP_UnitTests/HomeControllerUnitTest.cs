@@ -15,6 +15,7 @@ namespace NPP_UnitTests
         {
             _controller = new HomeController();
         }
+
         [TestMethod]
         public void Index()
         {
@@ -24,9 +25,7 @@ namespace NPP_UnitTests
             Assert.IsTrue(result is ViewResult);
             Assert.IsTrue(result.ViewName == "");
             Assert.IsNull(result.Model);
-            Assert.IsNotNull(result.ViewBag.VisibilityOptions);
-            Assert.IsTrue(result.ViewBag.VisibilityOptions == _controller._postsRepo.GetVisibilityOptions());
-            Console.WriteLine();
+            Assert.IsNotNull(result.ViewBag.VisibilityOptions);           
         }
     }
 }

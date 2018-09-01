@@ -2,6 +2,7 @@
 using PostSharp.Extensibility;
 using System;
 using System.Reflection;
+using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
 using NRAKO_IvanCicek.Helpers;
@@ -15,7 +16,7 @@ namespace NRAKO_IvanCicek.AOP
     {
         public override void OnException(MethodExecutionArgs args)
         {
-            var methodInfo = args.Method as MethodInfo;
+            MethodInfo methodInfo = args.Method as MethodInfo;
             if (methodInfo != null)
             {
                 Type returnType = methodInfo.ReturnType;
@@ -59,7 +60,15 @@ namespace NRAKO_IvanCicek.AOP
                 }
             }
 
-            Helpers.Logger.Instance.LogException(args.Exception);
+            if (HttpContext.Current != null)
+            {
+                Helpers.Logger.Instance.LogException(args.Exception);
+            }
+            else
+            {
+                throw args.Exception;
+            }
+           
             base.OnException(args);
         }
     }

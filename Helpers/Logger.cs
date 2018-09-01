@@ -81,7 +81,7 @@ namespace NRAKO_IvanCicek.Helpers
                     {
                         byte[] info = new UTF8Encoding(true).GetBytes(sb.ToString());
                         fs.Write(info, 0, info.Length);
-                    };
+                    }
                 }
                 else
                 {
