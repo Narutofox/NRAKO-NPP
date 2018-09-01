@@ -112,6 +112,7 @@
     <Compile Include="HomeControllerUnitTest.cs" />
     <Compile Include="LoginControllerUnitTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SignUpControllerUnitTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

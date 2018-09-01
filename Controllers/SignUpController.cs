@@ -23,36 +23,66 @@ namespace NRAKO_IvanCicek.Controllers
                     { "controller", "Home" },
                     { "action", "Index" }
                 });
-                return;
             }
         }
 
-        IUserDAL userDAL;
+        readonly IUserDAL userDAL;
         public SignUpController()
         {
             userDAL = DALFactory.GetUserDAL();
         }
+
+        public SignUpController(Context context)
+        {
+            userDAL = DALFactory.GetUserDAL(context);
+        }
+
         // GET: SignUp
-        public ActionResult Index()
+        public ViewResult Index()
         {
             return View();
         }
 
         [HttpPost]
-        public ActionResult SignUp(User user)
+        public ActionResult SignUp(SignUp signUpUser)
         {
             if (ModelState.IsValid)
             {
+                User user = new User()
+                {
+                    Email = signUpUser.Email,
+                    FirstName = signUpUser.FirstName,
+                    LastName = signUpUser.LastName,
+                    Password = signUpUser.Password
+                };
+                
                 user.Salt = Hashing.GetSalt();
                 user.Password = Hashing.Hash(user.Password, user.Salt);
                 user.RecordStatusId = (int)RecordStatus.Active;
                 user.UserTypeId = (int)UserType.Normal;
-                userDAL.Create(user);
-                MySession.Set("LoginUser", new LoginUser { FirstName = user.FirstName, LastName = user.LastName,
-                                                           Email = user.Email, UserTypeId = user.UserTypeId, UserId = user.UserId });
-                return RedirectToAction("Index","Home");
+
+                if (userDAL.Create(user))
+                {
+                    MySession.Set("LoginUser", new LoginUser
+                    {
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        Email = user.Email,
+                        UserTypeId = user.UserTypeId,
+                        UserId = user.UserId
+                    });
+                    return RedirectToAction("Index", "Home");
+                }
+                else
+                {
+                    TempData["notification"] = new Notification()
+                    {
+                        Type = NotificationType.Error,
+                        Text = "Dogodila se pogreška tokom registracije"
+                    };
+                }
             }
-            return View(user);
+            return View("Index", signUpUser);
         }
     }
 }
