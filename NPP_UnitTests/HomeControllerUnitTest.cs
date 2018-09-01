@@ -13,7 +13,7 @@ namespace NPP_UnitTests
         [TestInitialize]
         public void Initialize()
         {
-            _controller = new HomeController();
+            _controller = new HomeController(Helper.GetContext());
         }
 
         [TestMethod]

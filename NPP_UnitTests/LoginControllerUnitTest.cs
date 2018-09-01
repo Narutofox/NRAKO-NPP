@@ -13,12 +13,10 @@ namespace NPP_UnitTests
     public class LoginControllerUnitTest
     {
         private LoginController _controller;
-        private Context _context;
         [TestInitialize]
         public void Initialize()
         {
-            _context = Helper.GetContext();
-            _controller = new LoginController(_context);           
+            _controller = new LoginController(Helper.GetContext());           
         }
 
         [TestMethod]

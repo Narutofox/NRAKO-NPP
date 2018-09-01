@@ -16,13 +16,29 @@ namespace NRAKO_IvanCicek.Models
         public DbSet<UserBlacklist> UserBlacklists { get; set; }
         public DbSet<UserFollow> UsersFollowings { get; set; }
         
+        private bool AllowSaveChanges = true;
+
         public Context() : base("CS")
         {
 
         }
-
-        public Context(string connectionString) : base(connectionString)
+        /// <summary>
+        /// Konstruktor za unit testove
+        /// </summary>
+        /// <param name="connectionString"></param>
+        /// <param name="allowSaveChanges"></param>
+        public Context(string connectionString, bool allowSaveChanges = false) : base(connectionString)
         {
+            AllowSaveChanges = allowSaveChanges;
+        }
+
+        public override int SaveChanges()
+        {
+            if (AllowSaveChanges)
+            {
+                return base.SaveChanges();
+            }
+            return 1;
         }
     }
 }

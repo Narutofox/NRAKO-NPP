@@ -20,6 +20,11 @@ namespace NRAKO_IvanCicek.Controllers
         {
             _postsRepo = DALFactory.GetPostDAL();
         }
+
+        public HomeController(Context context)
+        {
+            _postsRepo = DALFactory.GetPostDAL(context);
+        }
         public ViewResult Index()
         {
             ViewBag.VisibilityOptions = _postsRepo.GetVisibilityOptions();
