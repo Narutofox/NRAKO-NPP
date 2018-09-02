@@ -81,5 +81,23 @@ namespace NPP_UnitTests
             Assert.IsTrue((result as RedirectToRouteResult).RouteValues["action"].ToString() == "Index");
             Assert.IsTrue((result as RedirectToRouteResult).RouteValues["controller"].ToString() == "Home");
         }
+
+        [TestMethod]
+        public void UpdateData()
+        {
+            User user = new User(){UserId = -5};
+            UserSetting userSettings = new UserSetting(){IdUser = -111};
+            ActionResult result = _controller.UpdateData(user, userSettings,null);
+
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result is RedirectToRouteResult);
+            Assert.IsTrue((result as RedirectToRouteResult).RouteValues.ContainsKey("action"));
+            Assert.IsTrue((result as RedirectToRouteResult).RouteValues.ContainsKey("controller"));
+            Assert.IsTrue((result as RedirectToRouteResult).RouteValues["action"].ToString() == "Index");
+            Assert.IsTrue((result as RedirectToRouteResult).RouteValues["controller"].ToString() == "Home");
+            Assert.IsTrue(_controller.TempData.ContainsKey("notification"));
+            Assert.IsTrue(_controller.TempData["notification"] is Notification);
+            Assert.IsTrue((_controller.TempData["notification"] as Notification).Type == NotificationType.Success);
+        }
     }
 }

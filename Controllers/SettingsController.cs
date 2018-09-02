@@ -111,7 +111,6 @@ namespace NRAKO_IvanCicek.Controllers
                         if (!String.IsNullOrEmpty(user.ProfileImagePath) && profileImage != null)
                         {
                             profileImage.SaveAs(Server.MapPath(user.ProfileImagePath));
-                            //LoginUser.ProfileImagePath = user.ProfileImagePath;
                         }
 
                         LoginUser.FirstName = user.FirstName;
