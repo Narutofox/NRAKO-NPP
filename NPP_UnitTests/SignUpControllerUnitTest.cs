@@ -1,13 +1,10 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NRAKO_IvanCicek.Controllers;
+using NRAKO_IvanCicek.Models.VM;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Web.Mvc;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NRAKO_IvanCicek.Controllers;
-using NRAKO_IvanCicek.Models.VM;
 
 namespace NPP_UnitTests
 {

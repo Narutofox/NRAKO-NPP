@@ -25,7 +25,7 @@ namespace NPP_UnitTests
             Assert.IsTrue(result is ViewResult);
             Assert.IsTrue(result.ViewName == "");
             Assert.IsNull(result.Model);
-            Assert.IsNotNull(result.ViewBag.VisibilityOptions);           
+            Assert.IsNotNull(_controller.ViewBag.VisibilityOptions);           
         }
     }
 }

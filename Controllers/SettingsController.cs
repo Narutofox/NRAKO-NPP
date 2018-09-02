@@ -24,15 +24,21 @@ namespace NRAKO_IvanCicek.Controllers
             LoginUser = (LoginUser)MySession.Get("LoginUser");
         }
 
+        public SettingsController(Context context, LoginUser loginUser)
+        {
+            userDAL = DALFactory.GetUserDAL(context);
+            LoginUser = loginUser;
+        }
+
         // GET: Settings
-        public ActionResult Index()
+        public ViewResult Index()
         {
             User user = userDAL.Get(LoginUser.UserId);
             ViewBag.UserSettings = userDAL.GetUserSettings(LoginUser.UserId);
             return View(user);
         }
 
-        public ActionResult ChangePassword()
+        public ViewResult ChangePassword()
         {
             return View();
         }

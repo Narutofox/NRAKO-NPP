@@ -142,12 +142,12 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool ChangePassword(ChangePassword changePassword, int userId)
         {
-            User DbUser = Get(userId);
-            if (DbUser != null && changePassword.NewPassword == changePassword.ConfirmNewPassword)
+            User dbUser = Get(userId);
+            if (dbUser != null && dbUser.Password == Hashing.Hash(changePassword.OldPassword, dbUser.Salt) && changePassword.NewPassword == changePassword.ConfirmNewPassword)
             {
-                DbUser.Salt = Hashing.GetSalt();
-                DbUser.Password = Hashing.Hash(changePassword.NewPassword, DbUser.Salt);
-                Context.Entry(DbUser).State = EntityState.Modified;
+                dbUser.Salt = Hashing.GetSalt();
+                dbUser.Password = Hashing.Hash(changePassword.NewPassword, dbUser.Salt);
+                Context.Entry(dbUser).State = EntityState.Modified;
                 if (Context.SaveChanges() > 0)
                 {
                     return true;
