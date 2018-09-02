@@ -11,7 +11,7 @@ namespace NPP_UnitTests
 {
     public static class Helper
     {
-        public static Context GetContext()
+        public static Context GetContext(bool allowSaveChanges = false)
         {
             SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder
             {
@@ -21,7 +21,7 @@ namespace NPP_UnitTests
                 Password = "Sp9p_~ddWAkq"
             };
 
-            return new Context(builder.ConnectionString);
+            return new Context(builder.ConnectionString, allowSaveChanges);
         }
 
         public static LoginUser GetLoginUserAdmin()

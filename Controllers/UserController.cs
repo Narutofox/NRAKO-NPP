@@ -24,18 +24,29 @@ namespace NRAKO_IvanCicek.Controllers
             UsersDAL = DALFactory.GetUserDAL();
             LoginUser = (LoginUser)MySession.Get("LoginUser");
         }
-      
+
+        public UserController(Context context, LoginUser loginUser)
+        {
+            _postsRepo = DALFactory.GetPostDAL(context);
+            UsersDAL = DALFactory.GetUserDAL(context);
+            LoginUser = loginUser;
+        }
+
         // GET: User
         public ActionResult Index(int? id = null)
-        {
-            ViewBag.VisibilityOptions = _postsRepo.GetVisibilityOptions();
-
-            UserProfile Profile = UsersDAL.GetProfileData(id != null ? id.Value : LoginUser.UserId);
+        {            
+            UserProfile profile = UsersDAL.GetProfileData(id != null ? id.Value : LoginUser.UserId);
+            if (profile == null)
+            {
+                return RedirectToAction("Index", "Home");
+            }
             if (id.HasValue && id.Value != LoginUser.UserId)
             {
-                Profile = UsersDAL.SetAdditionalSettingsForProfile(Profile, LoginUser.UserId);
+                profile = UsersDAL.SetAdditionalSettingsForProfile(profile, LoginUser.UserId);
             }
-            return View(Profile);       
+
+            ViewBag.VisibilityOptions = _postsRepo.GetVisibilityOptions();
+            return View(profile);       
         }
 
         [HttpPost]
@@ -49,7 +60,7 @@ namespace NRAKO_IvanCicek.Controllers
         {
             if (UsersDAL.ConfirmFriendRequest(userFriendId, LoginUser.UserId))
             {
-                return Json(new { Result = "OK" });
+                return Json(new JsonResponseVM { Result = "OK" });
             }
 
             return ErrorJSONResponse();
@@ -60,7 +71,7 @@ namespace NRAKO_IvanCicek.Controllers
         {
             if (UsersDAL.DenyFriendRequest(userFriendId, LoginUser.UserId))
             {
-                return Json(new { Result = "OK" });
+                return Json(new JsonResponseVM { Result = "OK" });
             }
 
             return ErrorJSONResponse();
@@ -72,17 +83,17 @@ namespace NRAKO_IvanCicek.Controllers
         {
             if (UsersDAL.IsOnFriendList(userId, LoginUser.UserId))
             {
-                return Json(new { Result = "ERROR", Msg = "Zahtjev za prijateljstvom već postoji" });
+                return Json(new JsonResponseVM { Result = "ERROR", Msg = "Zahtjev za prijateljstvom već postoji" });
             }
 
             if(UsersDAL.IsOnBlockList(userId, LoginUser.UserId))
             {
-                return Json(new { Result = "ERROR", Msg = "Zahtjev se ne može izvršiti" });
+                return Json(new JsonResponseVM { Result = "ERROR", Msg = "Zahtjev se ne može izvršiti" });
             }
 
             if (UsersDAL.SendFriendRequest(userId, LoginUser.UserId))
             {
-                return Json(new { Result = "OK" });
+                return Json(new JsonResponseVM { Result = "OK" });
             }
 
             return ErrorJSONResponse();
@@ -93,12 +104,12 @@ namespace NRAKO_IvanCicek.Controllers
         {
             if (UsersDAL.IsOnFriendList(userId, LoginUser.UserId) == false)
             {
-                return Json(new { Result = "ERROR", Msg = "Zahtjev za prijateljstvom ne postoji" });
+                return Json(new JsonResponseVM { Result = "ERROR", Msg = "Zahtjev za prijateljstvom ne postoji" });
             }
 
             if (UsersDAL.RemoveFriend(userId, LoginUser.UserId))
             {
-                return Json(new { Result = "OK" });
+                return Json(new JsonResponseVM { Result = "OK" });
             }
 
             return ErrorJSONResponse();
@@ -110,12 +121,12 @@ namespace NRAKO_IvanCicek.Controllers
         {
             if (UsersDAL.IsOnBlockList(userId, LoginUser.UserId))
             {
-                return Json(new { Result = "ERROR", Msg = "Zahtjev se ne može izvršiti" });
+                return Json(new JsonResponseVM { Result = "ERROR", Msg = "Zahtjev se ne može izvršiti" });
             }
 
             if (UsersDAL.BlockUser(userId, LoginUser.UserId))
             {
-                return Json(new { Result = "OK" });
+                return Json(new JsonResponseVM { Result = "OK" });
             }
 
             return ErrorJSONResponse();
@@ -126,12 +137,12 @@ namespace NRAKO_IvanCicek.Controllers
         {
             if (UsersDAL.IsOnBlockList(userId, LoginUser.UserId)== false)
             {
-                return Json(new { Result = "ERROR", Msg = "Zahtjev se ne može izvršiti" });
+                return Json(new JsonResponseVM { Result = "ERROR", Msg = "Zahtjev se ne može izvršiti" });
             }
 
             if (UsersDAL.UnblockUser(userId, LoginUser.UserId))
             {
-                return Json(new { Result = "OK" });
+                return Json(new JsonResponseVM { Result = "OK" });
             }
 
             return ErrorJSONResponse();
@@ -142,12 +153,12 @@ namespace NRAKO_IvanCicek.Controllers
         {
             if (UsersDAL.CanFollow(userId, LoginUser.UserId) == false)
             {
-                return Json(new { Result = "ERROR", Msg = "Zahtjev se ne može izvršiti" });
+                return Json(new JsonResponseVM { Result = "ERROR", Msg = "Zahtjev se ne može izvršiti" });
             }
 
             if (UsersDAL.FollowUser(userId, LoginUser.UserId))
             {
-                return Json(new { Result = "OK" });
+                return Json(new JsonResponseVM { Result = "OK" });
             }
 
             return ErrorJSONResponse();
@@ -159,12 +170,12 @@ namespace NRAKO_IvanCicek.Controllers
         {
             if (UsersDAL.IsFolowing(userId, LoginUser.UserId) == false)
             {
-                return Json(new { Result = "ERROR", Msg = "Zahtjev se ne može izvršiti" });
+                return Json(new JsonResponseVM { Result = "ERROR", Msg = "Zahtjev se ne može izvršiti" });
             }
 
             if (UsersDAL.StopFollowingUser(userId, LoginUser.UserId))
             {
-                return Json(new { Result = "OK" });
+                return Json(new JsonResponseVM { Result = "OK" });
             }
 
             return ErrorJSONResponse();
@@ -187,7 +198,7 @@ namespace NRAKO_IvanCicek.Controllers
 
         private JsonResult ErrorJSONResponse()
         {
-            return Json(new { Result = "ERROR", Msg = "Dogodila se pogreška" });
+            return Json(new JsonResponseVM { Result = "ERROR", Msg = "Dogodila se pogreška" });
         }
     }
 }

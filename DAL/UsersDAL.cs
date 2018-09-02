@@ -188,14 +188,7 @@ namespace NRAKO_IvanCicek.DAL
 
             if (BlackList != null)
             {
-                if (BlackList.IdUser == loginUserId)
-                {
-                    profile.IsBlocking = true;
-                }
-                else
-                {
-                    profile.IsBlocked = true;
-                }
+                 profile.IsBlocked = false;
             }
 
             if (Context.UsersFollowings.Any(x=>x.IdUser == loginUserId && x.IdUserToFollow == profile.UserId))
@@ -304,7 +297,7 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool ConfirmFriendRequest(int userFriendId, int userId)
         {
-            UserFriend ConfirmFriendRequest = Context.UserFriends.FirstOrDefault(x=>x.UserFriendId == userFriendId);
+            UserFriend ConfirmFriendRequest = Context.UserFriends.FirstOrDefault(x=>x.UserFriendId == userFriendId && x.RequestAccepted == false);
             if (ConfirmFriendRequest != null && ConfirmFriendRequest.IdUserToFriendList == userId)
             {
                 ConfirmFriendRequest.RequestAccepted = true;
@@ -316,7 +309,7 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool DenyFriendRequest(int userFriendId, int userId)
         {
-            UserFriend ConfirmFriendRequest = Context.UserFriends.FirstOrDefault(x => x.UserFriendId == userFriendId);
+            UserFriend ConfirmFriendRequest = Context.UserFriends.FirstOrDefault(x => x.UserFriendId == userFriendId && x.RequestAccepted == false);
             if (ConfirmFriendRequest != null && ConfirmFriendRequest.IdUserToFriendList == userId)
             {
                 Context.UserFriends.Remove(ConfirmFriendRequest);
