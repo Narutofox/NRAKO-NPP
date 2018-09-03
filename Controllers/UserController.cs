@@ -183,7 +183,7 @@ namespace NRAKO_IvanCicek.Controllers
 
 
 
-        public ActionResult Friends()
+        public ViewResult Friends()
         {            
             return View(UsersDAL.GetFriends(LoginUser.UserId));
         }
