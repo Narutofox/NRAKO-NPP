@@ -189,7 +189,7 @@ namespace NRAKO_IvanCicek.Controllers
         }
 
         [AdminOnlyFilter]
-        public ActionResult AdminPanel()
+        public ViewResult AdminPanel()
         {
             return View(_postsRepo.GetUnverifiedPosts());
         }

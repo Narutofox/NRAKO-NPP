@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
+using System.Linq;
 using System.Web.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NRAKO_IvanCicek.Controllers;
@@ -112,7 +114,7 @@ namespace NPP_UnitTests
         public void SendFriendRequest()
         {
             Context context = Helper.GetContext(true);
-            int idUserToFriendList = 3;
+            int idUserToFriendList = 5;
             UserFriend userFriend = new UserFriend {IdUser = _loginUser.UserId, IdUserToFriendList = idUserToFriendList, RequestAccepted = false};
 
             context.UserFriends.Add(userFriend);
@@ -149,7 +151,7 @@ namespace NPP_UnitTests
         public void RemoveFriend()
         {
             Context context = Helper.GetContext(true);
-            int idUserToFriendList = 3;
+            int idUserToFriendList = 5;
             
             JsonResult result = _controller.RemoveFriend(idUserToFriendList);
             Assert.IsNotNull(result);
@@ -165,6 +167,9 @@ namespace NPP_UnitTests
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data is JsonResponseVM);
             Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
+
+            context.UserFriends.Remove(userFriend);
+            context.SaveChanges();
         }
 		
 		[TestMethod]
@@ -220,10 +225,11 @@ namespace NPP_UnitTests
 		[TestMethod]
         public void FollowUser()
         {
-			int idUser = 3;
+            Context context = Helper.GetContext(true);
+            int idUser = 5;
 			bool allowFolowOriginalState = true;
-			
-			UserBlacklist userblock = new UserBlacklist {IdUser = _loginUser.UserId, IdUserToBlackList = idUser};
+
+            UserBlacklist userblock = new UserBlacklist {IdUser = _loginUser.UserId, IdUserToBlackList = idUser};
 			context.UserBlacklists.Add(userblock);
             context.SaveChanges();
 			
@@ -247,28 +253,32 @@ namespace NPP_UnitTests
 			context.UsersFollowings.Remove(userFollow);
             context.SaveChanges();
 			
-			UserSetting userSettings = Context.UserSettings.FirstOrDefault(x=>x.IdUser == userId);
+			UserSetting userSettings = context.UserSettings.First(x=>x.IdUser == idUser);
 			allowFolowOriginalState = userSettings.AllowFollowing;
-			userSettings.AllowFollowing = false;
+            userSettings.AllowFollowing = false;
+
+            context.Entry(userSettings).State = EntityState.Modified;
+            if (context.SaveChanges() > 0)
+            {
+                result = _controller.FollowUser(idUser);
+                Assert.IsNotNull(result);
+                Assert.IsTrue(result.Data is JsonResponseVM);
+                Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR", "Ne možeš pratiti korisnika koji ne dozvoljava pračenje");
+            }
+
+            userSettings = context.UserSettings.First(x => x.IdUser == idUser);
+            userSettings.AllowFollowing = true;
 			
 			context.Entry(userSettings).State = EntityState.Modified;
-			context.SaveChanges();
+            if (context.SaveChanges() > 0)
+            {
+                result = _controller.FollowUser(idUser);
+                Assert.IsNotNull(result);
+                Assert.IsTrue(result.Data is JsonResponseVM);
+                Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
+            }
 			
-			result = _controller.FollowUser(idUser);
-			Assert.IsNotNull(result);
-            Assert.IsTrue(result.Data is JsonResponseVM);
-            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR","Ne možeš pratiti korisnika koji ne dozvoljava pračenje");
 			
-			userSettings = Context.UserSettings.FirstOrDefault(x=>x.IdUser == userId);			
-			userSettings.AllowFollowing = true;
-			
-			context.Entry(userSettings).State = EntityState.Modified;
-			context.SaveChanges();
-			
-			result = _controller.FollowUser(idUser);
-			Assert.IsNotNull(result);
-            Assert.IsTrue(result.Data is JsonResponseVM);
-            Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
 			
 			userSettings.AllowFollowing = allowFolowOriginalState;
 			context.Entry(userSettings).State = EntityState.Modified;
@@ -279,25 +289,21 @@ namespace NPP_UnitTests
 		[TestMethod]
         public void StopFollowingUser()
         {
-			int idUser = 3;
-			bool allowFolowOriginalState = true;			
-									
-			result = _controller.StopFollowingUser(idUser);
+			int idUser = 5;
+			bool allowFolowOriginalState = true;
+            Context context = Helper.GetContext(true);
+
+            JsonResult result = _controller.StopFollowingUser(idUser);
 			Assert.IsNotNull(result);
             Assert.IsTrue(result.Data is JsonResponseVM);
             Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR","Ne možeš prestati pratiti korisnika kojeg ne pratiš");
-			
-			UserFollow userFollow= new UserFollow {IdUser = _loginUser.UserId, IdUserToFollow = idUser};
-			context.UsersFollowings.Add(userFollow);
-            context.SaveChanges();
+
 			
 			result = _controller.FollowUser(idUser);
 			Assert.IsNotNull(result);
             Assert.IsTrue(result.Data is JsonResponseVM);
             Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
-			
-			context.UsersFollowings.Remove(userFollow);
-            context.SaveChanges();						
+									
 		}
 		
 		[TestMethod]
@@ -305,7 +311,7 @@ namespace NPP_UnitTests
         {
 			ViewResult result = _controller.Friends();
             Assert.IsNotNull(result);
-            Assert.IsTrue((esult.ViewName == "");
+            Assert.IsTrue(result.ViewName == "");
             Assert.IsNotNull(result.Model);
             Assert.IsTrue(result.Model is IEnumerable<UserFriend>);	
 		}
@@ -315,7 +321,7 @@ namespace NPP_UnitTests
         {
 			ViewResult result = _controller.AdminPanel();
             Assert.IsNotNull(result);
-            Assert.IsTrue((esult.ViewName == "");
+            Assert.IsTrue(result.ViewName == "");
             Assert.IsNotNull(result.Model);
             Assert.IsTrue(result.Model is IEnumerable<UserPost> );	
 		}

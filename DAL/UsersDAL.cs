@@ -208,9 +208,10 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool IsOnBlockList(int userId, int loginUserId)
         {
-            return Context.UserBlacklists.Any(x =>
+            bool isOnBlockList = Context.UserBlacklists.Any(x =>
                                 (x.IdUser == userId && x.IdUserToBlackList == loginUserId) ||
                                 (x.IdUser == loginUserId && x.IdUserToBlackList == userId));
+            return isOnBlockList;
         }
 
         public bool SendFriendRequest(int userId, int loginUserId)
@@ -235,7 +236,7 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool UnblockUser(int userId, int loginUserId)
         {
-            Context.UserBlacklists.Remove(Context.UserBlacklists.FirstOrDefault(x => x.IdUser == loginUserId && x.IdUserToBlackList == userId || x.IdUser == userId && x.IdUserToBlackList == loginUserId));
+            Context.UserBlacklists.Remove(Context.UserBlacklists.First(x => x.IdUser == loginUserId && x.IdUserToBlackList == userId || x.IdUser == userId && x.IdUserToBlackList == loginUserId));
             return SaveChanges();
         }
 
@@ -247,7 +248,8 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool CanFollow(int userId, int loginUserId)
         {
-            if (IsOnBlockList(userId,loginUserId) == false && Context.UserSettings.FirstOrDefault(x=>x.IdUser == userId).AllowFollowing && IsFolowing(userId, loginUserId) == false)
+            bool allowFollowing = Context.UserSettings.First(x => x.IdUser == userId).AllowFollowing;
+            if (IsOnBlockList(userId,loginUserId) == false && allowFollowing && IsFolowing(userId, loginUserId) == false)
             {
                 return true;
             }
@@ -257,9 +259,10 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool IsFolowing(int userId, int loginUserId)
         {
-            return Context.UsersFollowings.Any(x =>
+            bool isFollowing = Context.UsersFollowings.Any(x =>
                                  (x.IdUser == userId && x.IdUserToFollow == loginUserId) ||
                                  (x.IdUser == loginUserId && x.IdUserToFollow == userId));
+            return isFollowing;
         }
 
         public bool StopFollowingUser(int userId, int loginUserId)
