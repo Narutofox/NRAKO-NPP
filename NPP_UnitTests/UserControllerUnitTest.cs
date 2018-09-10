@@ -226,6 +226,7 @@ namespace NPP_UnitTests
         public void FollowUser()
         {
             Context context = Helper.GetContext(true);
+            UserController controller = new UserController(context, _loginUser);
             int idUser = 5;
 			bool allowFolowOriginalState = true;
 
@@ -233,7 +234,7 @@ namespace NPP_UnitTests
 			context.UserBlacklists.Add(userblock);
             context.SaveChanges();
 			
-			JsonResult result = _controller.FollowUser(idUser);
+			JsonResult result = controller.FollowUser(idUser);
 			Assert.IsNotNull(result);
             Assert.IsTrue(result.Data is JsonResponseVM);
             Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR","Ne možeš pratiti korisnika kojeg si blokritao ili koji je tebe blokirao");
@@ -245,7 +246,7 @@ namespace NPP_UnitTests
 			context.UsersFollowings.Add(userFollow);
             context.SaveChanges();
 			
-			result = _controller.FollowUser(idUser);
+			result = controller.FollowUser(idUser);
 			Assert.IsNotNull(result);
             Assert.IsTrue(result.Data is JsonResponseVM);
             Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR","Ne možeš pratiti korisnika kojeg već pratiš");
@@ -260,7 +261,7 @@ namespace NPP_UnitTests
             context.Entry(userSettings).State = EntityState.Modified;
             if (context.SaveChanges() > 0)
             {
-                result = _controller.FollowUser(idUser);
+                result = controller.FollowUser(idUser);
                 Assert.IsNotNull(result);
                 Assert.IsTrue(result.Data is JsonResponseVM);
                 Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR", "Ne možeš pratiti korisnika koji ne dozvoljava pračenje");
@@ -272,7 +273,7 @@ namespace NPP_UnitTests
 			context.Entry(userSettings).State = EntityState.Modified;
             if (context.SaveChanges() > 0)
             {
-                result = _controller.FollowUser(idUser);
+                result = controller.FollowUser(idUser);
                 Assert.IsNotNull(result);
                 Assert.IsTrue(result.Data is JsonResponseVM);
                 Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
@@ -282,8 +283,10 @@ namespace NPP_UnitTests
 			
 			userSettings.AllowFollowing = allowFolowOriginalState;
 			context.Entry(userSettings).State = EntityState.Modified;
-			context.SaveChanges();
-		}
+            context.UsersFollowings.Remove(context.UsersFollowings.Single(x => x.IdUser == _loginUser.UserId && x.IdUserToFollow == idUser));
+            context.SaveChanges();
+           
+        }
 		
 		
 		[TestMethod]
