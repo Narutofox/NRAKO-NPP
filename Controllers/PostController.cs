@@ -17,15 +17,28 @@ namespace NRAKO_IvanCicek.Controllers
     [LoginRequiredFilter]
     public class PostController : Controller
     {
-        private readonly IPostsRepo _postsRepo;
+        public readonly IPostsRepo _postsRepo;
         private readonly LoginUser _loginUser;
+
         public PostController()
         {
             _postsRepo = DALFactory.GetPostDAL();
             _loginUser = (LoginUser)MySession.Get("LoginUser");
         }
 
-        public PartialViewResult GetUserPosts(int? userId)
+        public PostController(Context context, LoginUser loginUser)
+        {
+            _postsRepo = DALFactory.GetPostDAL(context);
+            _loginUser = loginUser;
+        }
+
+        public PostController(IPostsRepo postsRepo, LoginUser loginUser)
+        {
+            _postsRepo = postsRepo;
+            _loginUser = loginUser;
+        }
+
+        public PartialViewResult GetUserPosts(int? userId= null)
         {
             ViewBag.VisibilityOptions = _postsRepo.GetVisibilityOptions();
             IEnumerable<UserPost> posts = null;
@@ -87,19 +100,19 @@ namespace NRAKO_IvanCicek.Controllers
                         Directory.CreateDirectory(folderPath);
                     }
                     javascriptFile.SaveAs(Server.MapPath(newPost.CanvasJavascriptFilePath));
-                    return Json(new { Result = "OK", Msg = "Vaša objava će biti dostupna nakon potvrde administratora" });
+                    return Json(new JsonResponseVM { Result = "OK", Msg = "Vaša objava će biti dostupna nakon potvrde administratora" });
                 }
                 
 
-                return Json(new { Result = "OK", PostId = newPost.PostId });
+                return Json(new JsonResponseVM { Result = "OK", PostId = newPost.PostId });
             }
 
             if (ModelState.Values.Any(x => x.Errors.Count > 0))
             {
-                return Json(new { Result = "ERROR", Msg = ModelState.Values.First(x => x.Errors.Count > 0).Errors.First().ErrorMessage });
+                return Json(new JsonResponseVM { Result = "ERROR", Msg = ModelState.Values.First(x => x.Errors.Count > 0).Errors.First().ErrorMessage });
 
             }
-            return Json(new { Result = "ERROR", Msg = "CreatePost failed" });
+            return Json(new JsonResponseVM { Result = "ERROR", Msg = "CreatePost failed" });
         }
 
         [HttpGet]
@@ -129,18 +142,18 @@ namespace NRAKO_IvanCicek.Controllers
                         Directory.CreateDirectory(folderPath);
                     }
                     javascriptFile.SaveAs(Server.MapPath(editPost.CanvasJavascriptFilePath));
-                    return Json(new { Result = "OK", PostId = editPost.PostId, Msg = "Vaša objava će biti dostupna nakon potvrde administratora" });
+                    return Json(new JsonResponseVM { Result = "OK", PostId = editPost.PostId, Msg = "Vaša objava će biti dostupna nakon potvrde administratora" });
                 }
 
                 return Json(new { Result = "OK", PostId = editPost.PostId });
             }
             else if (ModelState.Values.Any(x => x.Errors.Count > 0))
             {
-                return Json(new { Result = "ERROR", Msg = ModelState.Values.First(x => x.Errors.Count > 0).Errors.First().ErrorMessage });
+                return Json(new JsonResponseVM { Result = "ERROR", Msg = ModelState.Values.First(x => x.Errors.Count > 0).Errors.First().ErrorMessage });
             }
             else
             {
-                return Json(new { Result = "ERROR", Msg = "Traženi podatak ne postoji ili nemate potrebna prava." });
+                return Json(new JsonResponseVM { Result = "ERROR", Msg = "Traženi podatak ne postoji ili nemate potrebna prava." });
             }
         }
 
@@ -150,11 +163,11 @@ namespace NRAKO_IvanCicek.Controllers
             
             if (_postsRepo.DeletePost(postId, _loginUser))
             {
-                return Json(new { Result = "OK" });
+                return Json(new JsonResponseVM { Result = "OK" });
             }
             else
             {
-                return Json(new { Result = "ERROR", Msg = "Traženi podatak ne postoji ili nemate potrebna prava." });
+                return Json(new JsonResponseVM { Result = "ERROR", Msg = "Traženi podatak ne postoji ili nemate potrebna prava." });
             }
         }
 
@@ -180,14 +193,14 @@ namespace NRAKO_IvanCicek.Controllers
                 comment.IdUser = _loginUser.UserId;
                 if (_postsRepo.CreateCommentOrLike(comment))
                 {
-                    return Json(new { Result = "OK", PostId = comment.IdPost });
+                    return Json(new JsonResponseVM { Result = "OK", PostId = comment.IdPost });
 
                 }
-                return Json(new { Result = "ERROR", Msg = "Pogreska" });
+                return Json(new JsonResponseVM { Result = "ERROR", Msg = "Pogreska" });
             }
             else
             {
-                return Json(new { Result = "ERROR", Msg = "Tekst komentara je obavezan" });
+                return Json(new JsonResponseVM { Result = "ERROR", Msg = "Tekst komentara je obavezan" });
             }
             
         }
@@ -204,11 +217,11 @@ namespace NRAKO_IvanCicek.Controllers
                 {
                     return Json(new { Result = "OK", PostId = IdPost.Value });
                 }
-                return Json(new { Result = "ERROR", Msg = "Pogreska" });
+                return Json(new JsonResponseVM { Result = "ERROR", Msg = "Pogreska" });
             }
             else
             {
-                return Json(new { Result = "ERROR", Msg = "Tekst komentara je obavezan" });
+                return Json(new JsonResponseVM { Result = "ERROR", Msg = "Tekst komentara je obavezan" });
             }
 
         }
@@ -218,9 +231,9 @@ namespace NRAKO_IvanCicek.Controllers
         {
                if( _postsRepo.DeleteComment(postCommentOrLikeId, _loginUser.UserId))
                 {
-                    return Json(new { Result = "OK" });
+                    return Json(new JsonResponseVM { Result = "OK" });
                 }
-            return Json(new { Result = "ERROR", Msg = "Pogreska" });
+            return Json(new JsonResponseVM { Result = "ERROR", Msg = "Pogreska" });
         }
 
         [HttpPost]
@@ -240,9 +253,9 @@ namespace NRAKO_IvanCicek.Controllers
             like.IdUser = _loginUser.UserId;
             like.DoYouLike = true;
             if (_postsRepo.CreateCommentOrLike(like)){
-                return Json(new { Result = "OK" });
+                return Json(new JsonResponseVM { Result = "OK" });
             }
-            return Json(new { Result = "ERROR", Msg = "Pogreska" });
+            return Json(new JsonResponseVM { Result = "ERROR", Msg = "Pogreska" });
         }
 
         [HttpPost]
@@ -250,9 +263,9 @@ namespace NRAKO_IvanCicek.Controllers
         {
             if(_postsRepo.DeleteLike(postId, _loginUser.UserId))
             {
-                return Json(new { Result = "OK" });
+                return Json(new JsonResponseVM { Result = "OK" });
             }
-            return Json(new { Result = "ERROR", Msg = "Pogreska" });
+            return Json(new JsonResponseVM { Result = "ERROR", Msg = "Pogreska" });
         }
 
         [AdminOnlyFilter]
@@ -265,11 +278,11 @@ namespace NRAKO_IvanCicek.Controllers
                 Post.Verified = true;
                 if (_postsRepo.EditPost(Post))
                 {
-                    return Json(new { Result = "OK" });
+                    return Json(new JsonResponseVM { Result = "OK" });
                 }
-                return Json(new { Result = "ERROR", Msg = "Pogreška kod spremanja" });
+                return Json(new JsonResponseVM { Result = "ERROR", Msg = "Pogreška kod spremanja" });
             }
-            return Json(new { Result = "ERROR", Msg = "Pogreska" });
+            return Json(new JsonResponseVM { Result = "ERROR", Msg = "Pogreska" });
         }
 
         [AdminOnlyFilter]
@@ -278,9 +291,9 @@ namespace NRAKO_IvanCicek.Controllers
         {
             if (_postsRepo.DeletePost(postId, _loginUser))
             {
-                return Json(new { Result = "OK" });
+                return Json(new JsonResponseVM { Result = "OK" });
             }
-            return Json(new { Result = "ERROR", Msg = "Pogreska" });
+            return Json(new JsonResponseVM { Result = "ERROR", Msg = "Pogreska" });
         }
     }
 }

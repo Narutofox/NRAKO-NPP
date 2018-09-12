@@ -10,6 +10,7 @@ using NRAKO_IvanCicek.Models.VM;
 
 namespace NPP_UnitTests
 {
+    //TODO moq
     [TestClass]
     public class UserControllerUnitTest
     {

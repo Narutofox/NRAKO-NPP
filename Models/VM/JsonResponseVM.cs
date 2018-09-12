@@ -9,5 +9,6 @@ namespace NRAKO_IvanCicek.Models.VM
     {
         public string Result { get; set; }
         public string Msg { get; set; }
+        public int PostId { get; set; }
     }
 }
