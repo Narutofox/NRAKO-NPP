@@ -103,7 +103,6 @@ namespace NRAKO_IvanCicek.Controllers
                     return Json(new JsonResponseVM { Result = "OK", Msg = "Vaša objava će biti dostupna nakon potvrde administratora" });
                 }
                 
-
                 return Json(new JsonResponseVM { Result = "OK", PostId = newPost.PostId });
             }
 
@@ -145,7 +144,7 @@ namespace NRAKO_IvanCicek.Controllers
                     return Json(new JsonResponseVM { Result = "OK", PostId = editPost.PostId, Msg = "Vaša objava će biti dostupna nakon potvrde administratora" });
                 }
 
-                return Json(new { Result = "OK", PostId = editPost.PostId });
+                return Json(new JsonResponseVM { Result = "OK", PostId = editPost.PostId });
             }
             else if (ModelState.Values.Any(x => x.Errors.Count > 0))
             {
@@ -179,7 +178,7 @@ namespace NRAKO_IvanCicek.Controllers
 
         public PartialViewResult PostComments(int PostId)
         {
-            var List = _postsRepo.GetCommentsAndLikes(PostId);
+            IEnumerable<PostCommentOrLike> List = _postsRepo.GetCommentsAndLikes(PostId);
             return PartialView("_PostComments", List);
         }
 
