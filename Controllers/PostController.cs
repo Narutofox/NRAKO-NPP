@@ -183,17 +183,14 @@ namespace NRAKO_IvanCicek.Controllers
         }
 
         [HttpPost]
-        public JsonResult CommentPost( string Comment="", int? IdPost = null)
-        {
-            PostCommentOrLike comment = new PostCommentOrLike { IdPost = IdPost.Value, Comment = Comment };
-
-            if (!String.IsNullOrEmpty(comment.Comment))
+        public JsonResult CommentPost(string comment, int idPost)
+        {          
+            if (!String.IsNullOrEmpty(comment))
             {
-                comment.IdUser = _loginUser.UserId;
-                if (_postsRepo.CreateCommentOrLike(comment))
+                PostCommentOrLike postComment = new PostCommentOrLike { IdPost = idPost, Comment = comment, IdUser = _loginUser.UserId };
+                if (_postsRepo.CreateCommentOrLike(postComment))
                 {
-                    return Json(new JsonResponseVM { Result = "OK", PostId = comment.IdPost });
-
+                    return Json(new JsonResponseVM { Result = "OK", PostId = postComment.IdPost });
                 }
                 return Json(new JsonResponseVM { Result = "ERROR", Msg = "Pogreska" });
             }
@@ -205,16 +202,15 @@ namespace NRAKO_IvanCicek.Controllers
         }
 
         [HttpPost]
-        public JsonResult EditCommentPost(string Comment = "", int? PostCommentOrLikeId=null, int? IdPost = null)
+        public JsonResult EditCommentPost(string Comment, int PostCommentOrLikeId, int IdPost)
         {
-            PostCommentOrLike CommentModel = new PostCommentOrLike {  Comment = Comment, PostCommentOrLikeId = PostCommentOrLikeId.Value };
 
-            if (!String.IsNullOrEmpty(CommentModel.Comment))
+            if (!String.IsNullOrEmpty(Comment))
             {
-                CommentModel.IdUser = _loginUser.UserId;
-                if (_postsRepo.UpdateCommentOrLike(CommentModel))
+                PostCommentOrLike commentModel = new PostCommentOrLike { Comment = Comment, PostCommentOrLikeId = PostCommentOrLikeId, IdUser = _loginUser.UserId };
+                if (_postsRepo.UpdateCommentOrLike(commentModel))
                 {
-                    return Json(new { Result = "OK", PostId = IdPost.Value });
+                    return Json(new JsonResponseVM { Result = "OK", PostId = IdPost });
                 }
                 return Json(new JsonResponseVM { Result = "ERROR", Msg = "Pogreska" });
             }

@@ -298,5 +298,225 @@ namespace NPP_UnitTests
             CollectionAssert.AreEqual(list, (result.Model as List<PostCommentOrLike>));
 
         }
+
+
+        [TestMethod]
+        public void CommentPost_CommentTextRequired()
+        {
+            int postId = 2;
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+            JsonResult result = controller.CommentPost("",postId);
+
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR");
+        }
+
+        [TestMethod]
+        public void CommentPost_DatabaseSaveFailed()
+        {
+            int postId = 2;
+            string comment = "Hello";
+
+            PostCommentOrLike postComment = new PostCommentOrLike { IdPost = postId, Comment = comment, IdUser=_loginUser.UserId };
+            _postsRepoMock.Setup(m => m.CreateCommentOrLike(postComment)).Returns(false);
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+            JsonResult result = controller.CommentPost(comment, postId);
+
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR");
+        }
+
+        [TestMethod]
+        public void CommentPost()
+        {
+            int postId = 2;
+            string comment = "Hello";
+
+            _postsRepoMock.Setup(m => m.CreateCommentOrLike(It.IsAny<PostCommentOrLike>())).Returns(true);
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.CommentPost(comment, postId);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
+            Assert.IsTrue((result.Data as JsonResponseVM).PostId == postId);
+        }
+
+
+        [TestMethod]
+        public void EditCommentPost_CommentTextRequired()
+        {
+            int postId = -2;
+            int postCommentOrLikeId = -1;
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+            JsonResult result = controller.EditCommentPost("", postCommentOrLikeId, postId);
+
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR");
+        }
+
+        [TestMethod]
+        public void EditCommentPost_DatabaseSaveFailed()
+        {
+            int postId = 2;
+            int postCommentOrLikeId = 1;
+            string comment = "Hello";
+
+            PostCommentOrLike postComment = new PostCommentOrLike { IdPost = postId, Comment = comment, IdUser = _loginUser.UserId };
+            _postsRepoMock.Setup(m => m.UpdateCommentOrLike(postComment)).Returns(false);
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+            JsonResult result = controller.EditCommentPost(comment, postCommentOrLikeId, postId);
+
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR");
+        }
+
+        [TestMethod]
+        public void EditCommentPost()
+        {
+            int postId = 2;
+            string comment = "Hello";
+            int postCommentOrLikeId = 1;
+
+            _postsRepoMock.Setup(m => m.UpdateCommentOrLike(It.IsAny<PostCommentOrLike>())).Returns(true);
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.EditCommentPost(comment, postCommentOrLikeId, postId);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
+            Assert.IsTrue((result.Data as JsonResponseVM).PostId == postId);
+        }
+
+        [TestMethod]
+        public void DeleteCommentOrLike_Failed()
+        {
+            int postCommentOrLikeId = 1;
+
+            _postsRepoMock.Setup(m => m.DeleteComment(postCommentOrLikeId,_loginUser.UserId)).Returns(false);
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.DeleteCommentOrLike(postCommentOrLikeId);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR");
+        }
+
+        [TestMethod]
+        public void DeleteCommentOrLike()
+        {
+            int postCommentOrLikeId = 1;
+
+            _postsRepoMock.Setup(m => m.DeleteComment(postCommentOrLikeId, _loginUser.UserId)).Returns(true);
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.DeleteCommentOrLike(postCommentOrLikeId);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
+        }
+
+
+        [TestMethod]
+        public void CheckIfAnyMoreComments()
+        {
+            int postId = 2;
+            List<PostCommentOrLike> list = new List<PostCommentOrLike>();
+            list.Add(new PostCommentOrLike());
+
+            _postsRepoMock.Setup(m => m.GetCommentsAndLikes(postId)).Returns(list);
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.ChekIfAnyMoreComments(postId);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.IsTrue(result.Data is bool);
+            Assert.IsTrue((bool)result.Data);
+        }
+
+        [TestMethod]
+        public void CheckIfAnyMoreComments_Failed()
+        {
+            int postId = 2;
+
+            _postsRepoMock.Setup(m => m.GetCommentsAndLikes(postId)).Returns(new List<PostCommentOrLike>());
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.ChekIfAnyMoreComments(postId);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.IsTrue(result.Data is bool);
+            Assert.IsFalse((bool)result.Data);
+        }
+
+
+        [TestMethod]
+        public void Like()
+        {
+            _postsRepoMock.Setup(m => m.CreateCommentOrLike(It.IsAny<PostCommentOrLike>())).Returns(true);
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.Like(new PostCommentOrLike());
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
+        }
+
+        [TestMethod]
+        public void Like_DatabaseSaveFailed()
+        {
+            _postsRepoMock.Setup(m => m.CreateCommentOrLike(It.IsAny<PostCommentOrLike>())).Returns(false);
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.Like(new PostCommentOrLike());
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR");
+        }
+
+
+
+        [TestMethod]
+        public void Unlike()
+        {
+            int postId = 2;
+            _postsRepoMock.Setup(m => m.DeleteLike(postId,_loginUser.UserId)).Returns(true);
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.Unlike(postId);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
+        }
+
+        [TestMethod]
+        public void Unlike_DatabaseSaveFailed()
+        {
+            int postId = 2;
+            _postsRepoMock.Setup(m => m.DeleteLike(postId, _loginUser.UserId)).Returns(false);
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.Unlike(postId);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR");
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
+        }
     }
 }
