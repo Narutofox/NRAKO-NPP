@@ -38,7 +38,7 @@ namespace NPP_UnitTests
             Assert.IsTrue(result.Model is IEnumerable<UserPost>);
             Assert.IsNotNull(_controller.ViewBag.VisibilityOptions);
             Assert.IsNotNull(_controller.ViewBag.Scripts);
-            CollectionAssert.AreEqual(_controller._postsRepo.GetUserPosts(_loginUser.UserId).ToList(), (result.Model as IEnumerable<UserPost>).ToList());
+            CollectionAssert.AreEqual(_controller.PostsRepo.GetUserPosts(_loginUser.UserId).ToList(), (result.Model as IEnumerable<UserPost>).ToList());
         }
 
         [TestMethod]
@@ -54,7 +54,7 @@ namespace NPP_UnitTests
             Assert.IsTrue(result.Model is IEnumerable<UserPost>);
             Assert.IsNotNull(_controller.ViewBag.VisibilityOptions);
             Assert.IsNotNull(_controller.ViewBag.Scripts);
-            CollectionAssert.AreEqual(_controller._postsRepo.GetProfileUserPosts(userId,_loginUser.UserId).ToList(), (result.Model as IEnumerable<UserPost>).ToList());
+            CollectionAssert.AreEqual(_controller.PostsRepo.GetProfileUserPosts(userId,_loginUser.UserId).ToList(), (result.Model as IEnumerable<UserPost>).ToList());
         }
 
 
@@ -69,7 +69,7 @@ namespace NPP_UnitTests
             Assert.IsTrue(result.Model is IEnumerable<UserPost>);
             Assert.IsNotNull(_controller.ViewBag.VisibilityOptions);
             Assert.IsNotNull(_controller.ViewBag.Scripts);
-            CollectionAssert.AreEqual(_controller._postsRepo.GetNews(_loginUser.UserId).ToList(), (result.Model as IEnumerable<UserPost>).ToList());
+            CollectionAssert.AreEqual(_controller.PostsRepo.GetNews(_loginUser.UserId).ToList(), (result.Model as IEnumerable<UserPost>).ToList());
         }
 
         [TestMethod]
