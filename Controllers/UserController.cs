@@ -4,10 +4,6 @@ using NRAKO_IvanCicek.Helpers;
 using NRAKO_IvanCicek.Interfaces;
 using NRAKO_IvanCicek.Models;
 using NRAKO_IvanCicek.Models.VM;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 
 namespace NRAKO_IvanCicek.Controllers
@@ -15,42 +11,42 @@ namespace NRAKO_IvanCicek.Controllers
     [LoginRequiredFilter]
     public class UserController : Controller
     {
-        IPostsRepo _postsRepo;
-        IUserDAL UsersDAL;
-        LoginUser LoginUser;
+        private readonly IPostsRepo _postsRepo;
+        private readonly IUserDAL _usersDal;
+        private readonly LoginUser _loginUser;
         public UserController()
         {
             _postsRepo = DALFactory.GetPostDAL();
-            UsersDAL = DALFactory.GetUserDAL();
-            LoginUser = (LoginUser)MySession.Get("LoginUser");
+            _usersDal = DALFactory.GetUserDAL();
+            _loginUser = (LoginUser)MySession.Get("LoginUser");
         }
 
         public UserController(Context context, LoginUser loginUser)
         {
             _postsRepo = DALFactory.GetPostDAL(context);
-            UsersDAL = DALFactory.GetUserDAL(context);
-            LoginUser = loginUser;
+            _usersDal = DALFactory.GetUserDAL(context);
+            _loginUser = loginUser;
         }
 
         public UserController(IPostsRepo postsRepo,IUserDAL userRepo, LoginUser loginUser)
         {
             _postsRepo = postsRepo;
-            UsersDAL = userRepo;
-            LoginUser = loginUser;
+            _usersDal = userRepo;
+            _loginUser = loginUser;
         }
 
 
         // GET: User
         public ActionResult Index(int? id = null)
         {            
-            UserProfile profile = UsersDAL.GetProfileData(id != null ? id.Value : LoginUser.UserId);
+            UserProfile profile = _usersDal.GetProfileData(id ?? _loginUser.UserId);
             if (profile == null)
             {
                 return RedirectToAction("Index", "Home");
             }
-            if (id.HasValue && id.Value != LoginUser.UserId)
+            if (id.HasValue && id.Value != _loginUser.UserId)
             {
-                profile = UsersDAL.SetAdditionalSettingsForProfile(profile, LoginUser.UserId);
+                profile = _usersDal.SetAdditionalSettingsForProfile(profile, _loginUser.UserId);
             }
 
             ViewBag.VisibilityOptions = _postsRepo.GetVisibilityOptions();
@@ -60,140 +56,140 @@ namespace NRAKO_IvanCicek.Controllers
         [HttpPost]
         public JsonResult UserSearch(string fullName)
         {
-            return Json(UsersDAL.Search(fullName));
+            return Json(_usersDal.Search(fullName));
         }
 
         [HttpPost]
         public JsonResult ConfirmFriendRequest(int userFriendId)
         {
-            if (UsersDAL.ConfirmFriendRequest(userFriendId, LoginUser.UserId))
+            if (_usersDal.ConfirmFriendRequest(userFriendId, _loginUser.UserId))
             {
                 return Json(new JsonResponseVM { Result = "OK" });
             }
 
-            return ErrorJSONResponse();
+            return ErrorJsonResponse();
         }
 
         [HttpPost]
         public JsonResult DenyFriendRequest(int userFriendId)
         {
-            if (UsersDAL.DenyFriendRequest(userFriendId, LoginUser.UserId))
+            if (_usersDal.DenyFriendRequest(userFriendId, _loginUser.UserId))
             {
                 return Json(new JsonResponseVM { Result = "OK" });
             }
 
-            return ErrorJSONResponse();
+            return ErrorJsonResponse();
         }
 
 
         [HttpPost]
         public JsonResult SendFriendRequest(int userId)
         {
-            if (UsersDAL.IsOnFriendList(userId, LoginUser.UserId))
+            if (_usersDal.IsOnFriendList(userId, _loginUser.UserId))
             {
                 return Json(new JsonResponseVM { Result = "ERROR", Msg = "Zahtjev za prijateljstvom već postoji" });
             }
 
-            if(UsersDAL.IsOnBlockList(userId, LoginUser.UserId))
+            if(_usersDal.IsOnBlockList(userId, _loginUser.UserId))
             {
                 return Json(new JsonResponseVM { Result = "ERROR", Msg = "Zahtjev se ne može izvršiti" });
             }
 
-            if (UsersDAL.SendFriendRequest(userId, LoginUser.UserId))
+            if (_usersDal.SendFriendRequest(userId, _loginUser.UserId))
             {
                 return Json(new JsonResponseVM { Result = "OK" });
             }
 
-            return ErrorJSONResponse();
+            return ErrorJsonResponse();
         }
 
         [HttpPost]
         public JsonResult RemoveFriend(int userId)
         {
-            if (UsersDAL.IsOnFriendList(userId, LoginUser.UserId) == false)
+            if (_usersDal.IsOnFriendList(userId, _loginUser.UserId) == false)
             {
                 return Json(new JsonResponseVM { Result = "ERROR", Msg = "Zahtjev za prijateljstvom ne postoji" });
             }
 
-            if (UsersDAL.RemoveFriend(userId, LoginUser.UserId))
+            if (_usersDal.RemoveFriend(userId, _loginUser.UserId))
             {
                 return Json(new JsonResponseVM { Result = "OK" });
             }
 
-            return ErrorJSONResponse();
+            return ErrorJsonResponse();
 
         }
 
         [HttpPost]
         public JsonResult BlockUser(int userId)
         {
-            if (UsersDAL.IsOnBlockList(userId, LoginUser.UserId))
+            if (_usersDal.IsOnBlockList(userId, _loginUser.UserId))
             {
                 return Json(new JsonResponseVM { Result = "ERROR", Msg = "Zahtjev se ne može izvršiti" });
             }
 
-            if (UsersDAL.BlockUser(userId, LoginUser.UserId))
+            if (_usersDal.BlockUser(userId, _loginUser.UserId))
             {
                 return Json(new JsonResponseVM { Result = "OK" });
             }
 
-            return ErrorJSONResponse();
+            return ErrorJsonResponse();
         }
 
         [HttpPost]
         public JsonResult UnblockUser(int userId)
         {
-            if (UsersDAL.IsOnBlockList(userId, LoginUser.UserId)== false)
+            if (_usersDal.IsOnBlockList(userId, _loginUser.UserId)== false)
             {
                 return Json(new JsonResponseVM { Result = "ERROR", Msg = "Zahtjev se ne može izvršiti" });
             }
 
-            if (UsersDAL.UnblockUser(userId, LoginUser.UserId))
+            if (_usersDal.UnblockUser(userId, _loginUser.UserId))
             {
                 return Json(new JsonResponseVM { Result = "OK" });
             }
 
-            return ErrorJSONResponse();
+            return ErrorJsonResponse();
         }
 
         [HttpPost]
         public JsonResult FollowUser(int userId)
         {
-            if (UsersDAL.CanFollow(userId, LoginUser.UserId) == false)
+            if (_usersDal.CanFollow(userId, _loginUser.UserId) == false)
             {
                 return Json(new JsonResponseVM { Result = "ERROR", Msg = "Zahtjev se ne može izvršiti" });
             }
 
-            if (UsersDAL.FollowUser(userId, LoginUser.UserId))
+            if (_usersDal.FollowUser(userId, _loginUser.UserId))
             {
                 return Json(new JsonResponseVM { Result = "OK" });
             }
 
-            return ErrorJSONResponse();
+            return ErrorJsonResponse();
         }
 
 
         [HttpPost]
         public JsonResult StopFollowingUser(int userId)
         {
-            if (UsersDAL.IsFollowing(userId, LoginUser.UserId) == false)
+            if (_usersDal.IsFollowing(userId, _loginUser.UserId) == false)
             {
                 return Json(new JsonResponseVM { Result = "ERROR", Msg = "Zahtjev se ne može izvršiti" });
             }
 
-            if (UsersDAL.StopFollowingUser(userId, LoginUser.UserId))
+            if (_usersDal.StopFollowingUser(userId, _loginUser.UserId))
             {
                 return Json(new JsonResponseVM { Result = "OK" });
             }
 
-            return ErrorJSONResponse();
+            return ErrorJsonResponse();
         }
 
 
 
         public ViewResult Friends()
         {            
-            return View(UsersDAL.GetFriends(LoginUser.UserId));
+            return View(_usersDal.GetFriends(_loginUser.UserId));
         }
 
         [AdminOnlyFilter]
@@ -204,7 +200,7 @@ namespace NRAKO_IvanCicek.Controllers
 
         
 
-        private JsonResult ErrorJSONResponse()
+        private JsonResult ErrorJsonResponse()
         {
             return Json(new JsonResponseVM { Result = "ERROR", Msg = "Dogodila se pogreška" });
         }
