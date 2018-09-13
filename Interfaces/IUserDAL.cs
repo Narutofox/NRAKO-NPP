@@ -30,7 +30,7 @@ namespace NRAKO_IvanCicek.Interfaces
         bool UnblockUser(int userId, int loginUserId);
         bool FollowUser(int userId, int loginUserId);
         bool CanFollow(int userId, int loginUserId);
-        bool IsFolowing(int userId, int loginUserId);
+        bool IsFollowing(int userId, int loginUserId);
         bool StopFollowingUser(int userId, int loginUserId);
         IEnumerable<UserFriend> GetFriends(int userId);
         bool ConfirmFriendRequest(int userFriendId, int userId);

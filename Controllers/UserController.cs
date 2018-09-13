@@ -32,6 +32,14 @@ namespace NRAKO_IvanCicek.Controllers
             LoginUser = loginUser;
         }
 
+        public UserController(IPostsRepo postsRepo,IUserDAL userRepo, LoginUser loginUser)
+        {
+            _postsRepo = postsRepo;
+            UsersDAL = userRepo;
+            LoginUser = loginUser;
+        }
+
+
         // GET: User
         public ActionResult Index(int? id = null)
         {            
@@ -168,7 +176,7 @@ namespace NRAKO_IvanCicek.Controllers
         [HttpPost]
         public JsonResult StopFollowingUser(int userId)
         {
-            if (UsersDAL.IsFolowing(userId, LoginUser.UserId) == false)
+            if (UsersDAL.IsFollowing(userId, LoginUser.UserId) == false)
             {
                 return Json(new JsonResponseVM { Result = "ERROR", Msg = "Zahtjev se ne može izvršiti" });
             }

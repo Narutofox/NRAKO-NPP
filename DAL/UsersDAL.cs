@@ -249,7 +249,7 @@ namespace NRAKO_IvanCicek.DAL
         public bool CanFollow(int userId, int loginUserId)
         {
             bool allowFollowing = Context.UserSettings.First(x => x.IdUser == userId).AllowFollowing;
-            if (IsOnBlockList(userId,loginUserId) == false && allowFollowing && IsFolowing(userId, loginUserId) == false)
+            if (IsOnBlockList(userId,loginUserId) == false && allowFollowing && IsFollowing(userId, loginUserId) == false)
             {
                 return true;
             }
@@ -257,7 +257,7 @@ namespace NRAKO_IvanCicek.DAL
             return false;
         }
 
-        public bool IsFolowing(int userId, int loginUserId)
+        public bool IsFollowing(int userId, int loginUserId)
         {
             bool isFollowing = Context.UsersFollowings.Any(x =>
                                  (x.IdUser == userId && x.IdUserToFollow == loginUserId) ||

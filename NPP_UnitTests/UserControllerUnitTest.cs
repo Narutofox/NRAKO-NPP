@@ -4,23 +4,30 @@ using System.Data.Entity;
 using System.Linq;
 using System.Web.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using NRAKO_IvanCicek.Controllers;
+using NRAKO_IvanCicek.Helpers;
+using NRAKO_IvanCicek.Interfaces;
 using NRAKO_IvanCicek.Models;
 using NRAKO_IvanCicek.Models.VM;
 
 namespace NPP_UnitTests
 {
-    //TODO moq
     [TestClass]
     public class UserControllerUnitTest
     {
         private UserController _controller;
         private LoginUser _loginUser;
+        private Mock<IUserDAL> _userRepoMock;
+        private Mock<IPostsRepo> _postsRepoMock;
+
         [TestInitialize]
         public void Initialize()
         {
             _loginUser = Helper.GetLoginUser();
             _controller = new UserController(Helper.GetContext(), _loginUser);
+            _userRepoMock = new Mock<IUserDAL>();
+            _postsRepoMock = new Mock<IPostsRepo>();
         }
 
         [TestMethod]
@@ -66,278 +73,350 @@ namespace NPP_UnitTests
         [TestMethod]
         public void ConfirmFriendRequest()
         {
-            Context context = Helper.GetContext(true);
-            int idUserToFriendList = 3;
-            UserFriend userFriend = new UserFriend {IdUser = _loginUser.UserId, IdUserToFriendList = idUserToFriendList, RequestAccepted = false};
+            int userFriendId = 3;
 
-            context.UserFriends.Add(userFriend);
-            context.SaveChanges();
+            _userRepoMock.Setup(m => m.ConfirmFriendRequest(userFriendId, _loginUser.UserId)).Returns(true);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
 
-            JsonResult result = _controller.ConfirmFriendRequest(userFriend.UserFriendId);
+            JsonResult result = controller.ConfirmFriendRequest(userFriendId);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data is JsonResponseVM);
             Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
 
-            result = _controller.ConfirmFriendRequest(-1);
+
+        }
+
+        [TestMethod]
+        public void ConfirmFriendRequest_DatabaseSaveFailed()
+        {
+            int userFriendId = 3;
+            _userRepoMock.Setup(m => m.ConfirmFriendRequest(userFriendId, _loginUser.UserId)).Returns(false);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.ConfirmFriendRequest(userFriendId);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data is JsonResponseVM);
             Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR");
-
-            context.UserFriends.Remove(userFriend);
-            context.SaveChanges();
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
         }
-		
-		[TestMethod]
+
+        [TestMethod]
         public void DenyFriendRequest()
         {
-            Context context = Helper.GetContext(true);
-            int idUserToFriendList = 3;
-            UserFriend userFriend = new UserFriend {IdUser = _loginUser.UserId, IdUserToFriendList = idUserToFriendList, RequestAccepted = false};
+            int userFriendId = 3;
 
-            context.UserFriends.Add(userFriend);
-            context.SaveChanges();
+            _userRepoMock.Setup(m => m.DenyFriendRequest(userFriendId, _loginUser.UserId)).Returns(true);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
 
-            JsonResult result = _controller.DenyFriendRequest(userFriend.UserFriendId);
+            JsonResult result = controller.DenyFriendRequest(userFriendId);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data is JsonResponseVM);
             Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
 
-            result = _controller.ConfirmFriendRequest(-1);
+        }
+
+        [TestMethod]
+        public void DenyFriendRequest_DatabaseSaveFailed()
+        {
+            int userFriendId = 3;
+            _userRepoMock.Setup(m => m.DenyFriendRequest(userFriendId, _loginUser.UserId)).Returns(false);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.DenyFriendRequest(userFriendId);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data is JsonResponseVM);
             Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR");
-
-            context.UserFriends.Remove(userFriend);
-            context.SaveChanges();
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
         }
-		
-		[TestMethod]
+
+        [TestMethod]
+        public void SendFriendRequest_IsOnFriendList()
+        {
+            int userId = 3;
+            _userRepoMock.Setup(m => m.IsOnFriendList(userId, _loginUser.UserId)).Returns(true);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.SendFriendRequest(userId);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR","Ne možeš dodati prijatelja ako već jeste prijatelji");
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
+        }
+
+        [TestMethod]
+        public void SendFriendRequest_IsOnBlockList()
+        {
+            int userId = 3;
+            _userRepoMock.Setup(m => m.IsOnFriendList(userId, _loginUser.UserId)).Returns(false);
+            _userRepoMock.Setup(m => m.IsOnBlockList(userId, _loginUser.UserId)).Returns(true);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.SendFriendRequest(userId);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR", "Ne možeš dodati prijatelja ako je blokiran od vas ili ste vi blokirani od njega/nje");
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
+        }
+
+        [TestMethod]
+        public void SendFriendRequest_DatabaseSaveFailed()
+        {
+            int userId = 3;
+            _userRepoMock.Setup(m => m.IsOnFriendList(userId, _loginUser.UserId)).Returns(false);
+            _userRepoMock.Setup(m => m.IsOnBlockList(userId, _loginUser.UserId)).Returns(false);
+            _userRepoMock.Setup(m => m.SendFriendRequest(userId, _loginUser.UserId)).Returns(false);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.SendFriendRequest(userId);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR");
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
+        }
+
+        [TestMethod]
         public void SendFriendRequest()
         {
-            Context context = Helper.GetContext(true);
-            int idUserToFriendList = 5;
-            UserFriend userFriend = new UserFriend {IdUser = _loginUser.UserId, IdUserToFriendList = idUserToFriendList, RequestAccepted = false};
+            int userId = 3;
+            _userRepoMock.Setup(m => m.IsOnFriendList(userId, _loginUser.UserId)).Returns(false);
+            _userRepoMock.Setup(m => m.IsOnBlockList(userId, _loginUser.UserId)).Returns(false);
+            _userRepoMock.Setup(m => m.SendFriendRequest(userId, _loginUser.UserId)).Returns(true);
 
-            context.UserFriends.Add(userFriend);
-            context.SaveChanges();
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
 
-            JsonResult result = _controller.SendFriendRequest(idUserToFriendList);
-            Assert.IsNotNull(result);
-            Assert.IsTrue(result.Data is JsonResponseVM);
-            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR","Ne možeš poslati zahtjev ako već jeste prijatelji ");
-			
-						
-			UserBlacklist userblock = new UserBlacklist {IdUser = _loginUser.UserId, IdUserToBlackList = idUserToFriendList};
-
-            context.UserBlacklists.Add(userblock);
-			context.UserFriends.Remove(userFriend);
-            context.SaveChanges();
-
-            result = _controller.SendFriendRequest(idUserToFriendList);
-            Assert.IsNotNull(result);
-            Assert.IsTrue(result.Data is JsonResponseVM);
-            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR","Ne možeš poslati zahtjev ako si na block listi");
-
-			
-			context.UserBlacklists.Remove(userblock);
-            context.SaveChanges();
-			
-			result = _controller.SendFriendRequest(idUserToFriendList);
+            JsonResult result = controller.SendFriendRequest(userId);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data is JsonResponseVM);
             Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
         }
-		
-		[TestMethod]
+
+        [TestMethod]
+        public void RemoveFriend_DatabaseSaveFailed()
+        {
+            int userId = 3;
+            _userRepoMock.Setup(m => m.IsOnFriendList(userId, _loginUser.UserId)).Returns(false);
+            _userRepoMock.Setup(m => m.RemoveFriend(userId, _loginUser.UserId)).Returns(false);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.RemoveFriend(userId);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR");
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
+        }
+
+        [TestMethod]
+        public void RemoveFriend_IsOnFriendList()
+        {
+            int userId = 3;
+            _userRepoMock.Setup(m => m.IsOnFriendList(userId, _loginUser.UserId)).Returns(false);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.RemoveFriend(userId);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR", "Ne možeš ukloniti prijktelja ako već niste prijatelji");
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
+        }
+
+        [TestMethod]
         public void RemoveFriend()
         {
-            Context context = Helper.GetContext(true);
-            int idUserToFriendList = 5;
-            
-            JsonResult result = _controller.RemoveFriend(idUserToFriendList);
-            Assert.IsNotNull(result);
-            Assert.IsTrue(result.Data is JsonResponseVM);
-            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR","Ne možeš maknuti sa liste prijatelja ako već niste prijatelji");
-			
-			UserFriend userFriend = new UserFriend {IdUser = _loginUser.UserId, IdUserToFriendList = idUserToFriendList, RequestAccepted = true};
+            int userId = 3;
+            _userRepoMock.Setup(m => m.IsOnFriendList(userId, _loginUser.UserId)).Returns(true);
+            _userRepoMock.Setup(m => m.RemoveFriend(userId, _loginUser.UserId)).Returns(true);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
 
-            context.UserFriends.Add(userFriend);
-            context.SaveChanges();
-			
-			result = _controller.RemoveFriend(idUserToFriendList);
+            JsonResult result = controller.RemoveFriend(userId);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data is JsonResponseVM);
             Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
-
-            context.UserFriends.Remove(userFriend);
-            context.SaveChanges();
         }
-		
-		[TestMethod]
+
+        [TestMethod]
+        public void BlockUser_IsOnBlockList()
+        {
+            int userId = 3;
+            _userRepoMock.Setup(m => m.IsOnBlockList(userId, _loginUser.UserId)).Returns(true);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.BlockUser(userId);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR", "Ne možeš blokirati ako već je blokirano");
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
+        }
+
+        [TestMethod]
+        public void BlockUser_DatabaseSaveFailed()
+        {
+            int userId = 3;
+            _userRepoMock.Setup(m => m.IsOnBlockList(userId, _loginUser.UserId)).Returns(false);
+            _userRepoMock.Setup(m => m.BlockUser(userId, _loginUser.UserId)).Returns(false);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.BlockUser(userId);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR");
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
+        }
+
+        [TestMethod]
         public void BlockUser()
         {
-            Context context = Helper.GetContext(true);
-            int idUserToBlackList = 3;
-									
-			UserBlacklist userblock = new UserBlacklist {IdUser = _loginUser.UserId, IdUserToBlackList = idUserToBlackList};
+            int userId = 3;
+            _userRepoMock.Setup(m => m.IsOnBlockList(userId, _loginUser.UserId)).Returns(false);
+            _userRepoMock.Setup(m => m.BlockUser(userId, _loginUser.UserId)).Returns(true);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
 
-            context.UserBlacklists.Add(userblock);
-            context.SaveChanges();
-
-            JsonResult result = _controller.BlockUser(idUserToBlackList);
-            Assert.IsNotNull(result);
-            Assert.IsTrue(result.Data is JsonResponseVM);
-            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR","Ne možeš blokirati ako već je blokirano");
-
-			
-			context.UserBlacklists.Remove(userblock);
-            context.SaveChanges();
-			
-			result = _controller.BlockUser(idUserToBlackList);
+            JsonResult result = controller.BlockUser(userId);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data is JsonResponseVM);
             Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
         }
-		
-		[TestMethod]
+
+
+        [TestMethod]
+        public void UnblockUser_IsOnBlockList()
+        {
+            int userId = 3;
+            _userRepoMock.Setup(m => m.IsOnBlockList(userId, _loginUser.UserId)).Returns(false);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.UnblockUser(userId);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR", "Ne možeš odblokirati ako već nije blokirano");
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
+        }
+
+        [TestMethod]
+        public void UnblockUser_DatabaseSaveFailed()
+        {
+            int userId = 3;
+            _userRepoMock.Setup(m => m.IsOnBlockList(userId, _loginUser.UserId)).Returns(true);
+            _userRepoMock.Setup(m => m.UnblockUser(userId, _loginUser.UserId)).Returns(false);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.UnblockUser(userId);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR");
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
+        }
+
+        [TestMethod]
         public void UnblockUser()
         {
-            Context context = Helper.GetContext(true);
-            int idUserToBlackList = 3;
-											          
-            JsonResult result = _controller.UnblockUser(idUserToBlackList);
-            Assert.IsNotNull(result);
-            Assert.IsTrue(result.Data is JsonResponseVM);
-            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR","Ne možeš odblokirati ako već nije blokirano");
+            int userId = 3;
+            _userRepoMock.Setup(m => m.IsOnBlockList(userId, _loginUser.UserId)).Returns(true);
+            _userRepoMock.Setup(m => m.UnblockUser(userId, _loginUser.UserId)).Returns(true);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
 
-			UserBlacklist userblock = new UserBlacklist {IdUser = _loginUser.UserId, IdUserToBlackList = idUserToBlackList};
-			context.UserBlacklists.Add(userblock);
-            context.SaveChanges();
-						
-			result = _controller.UnblockUser(idUserToBlackList);
+            JsonResult result = controller.UnblockUser(userId);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data is JsonResponseVM);
             Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
-			
-			context.UserBlacklists.Remove(userblock);
-            context.SaveChanges();
-        }
-
-        [TestMethod]
-        public void FollowUser_Block()
-        {
-            Context context = Helper.GetContext(true);
-            UserController controller = new UserController(context, _loginUser);
-            int idUser = 5;
-
-            UserBlacklist userblock = new UserBlacklist { IdUser = _loginUser.UserId, IdUserToBlackList = idUser };
-            context.UserBlacklists.Add(userblock);
-            context.SaveChanges();
-
-            JsonResult result = controller.FollowUser(idUser);
-            Assert.IsNotNull(result);
-            Assert.IsTrue(result.Data is JsonResponseVM);
-            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR", "Ne možeš pratiti korisnika kojeg si blokirao ili koji je tebe blokirao");
-
-            context.UserBlacklists.Remove(userblock);
-            context.SaveChanges();
-        }
-
-        [TestMethod]
-        public void FollowUser_AlreadyFollowing()
-        {
-            Context context = Helper.GetContext(true);
-            UserController controller = new UserController(context, _loginUser);
-            int idUser = 5;
-
-            UserFollow userFollow = new UserFollow { IdUser = _loginUser.UserId, IdUserToFollow = idUser };
-            context.UsersFollowings.Add(userFollow);
-            context.SaveChanges();
-
-            JsonResult result = controller.FollowUser(idUser);
-            Assert.IsNotNull(result);
-            Assert.IsTrue(result.Data is JsonResponseVM);
-            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR", "Ne možeš pratiti korisnika kojeg već pratiš");
-
-            context.UsersFollowings.Remove(userFollow);
-            context.SaveChanges();
         }
 
         [TestMethod]
         public void FollowUser_FolowNotAllowed()
         {
-            Context context = Helper.GetContext(true);
-            UserController controller = new UserController(context, _loginUser);
-            int idUser = 5;
-            bool allowFolowOriginalState = true;
+            int userId = 3;
+            _userRepoMock.Setup(m => m.CanFollow(userId, _loginUser.UserId)).Returns(false);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
 
-            UserSetting userSettings = context.UserSettings.First(x => x.IdUser == idUser);
-            allowFolowOriginalState = userSettings.AllowFollowing;
-            userSettings.AllowFollowing = false;
 
-            context.Entry(userSettings).State = EntityState.Modified;
-            if (context.SaveChanges() > 0)
-            {
-                JsonResult result = controller.FollowUser(idUser);
-                Assert.IsNotNull(result);
-                Assert.IsTrue(result.Data is JsonResponseVM);
-                Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR", "Ne možeš pratiti korisnika koji ne dozvoljava pračenje");
-            }
-           
-            userSettings.AllowFollowing = allowFolowOriginalState;
-            context.Entry(userSettings).State = EntityState.Modified;
-            context.SaveChanges();
+            JsonResult result = controller.FollowUser(userId);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR");
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
         }
+
+        [TestMethod]
+        public void FollowUser_DatabaseSaveFailed()
+        {
+            int userId = 3;
+            _userRepoMock.Setup(m => m.CanFollow(userId, _loginUser.UserId)).Returns(true);
+            _userRepoMock.Setup(m => m.FollowUser(userId, _loginUser.UserId)).Returns(false);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
+
+
+            JsonResult result = controller.FollowUser(userId);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR");
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
+        }
+
 
 
         [TestMethod]
         public void FollowUser()
         {
-            Context context = Helper.GetContext(true);
-            UserController controller = new UserController(context, _loginUser);
-            int idUser = 5;
+            int userId = 3;
+            _userRepoMock.Setup(m => m.CanFollow(userId, _loginUser.UserId)).Returns(true);
+            _userRepoMock.Setup(m => m.FollowUser(userId, _loginUser.UserId)).Returns(true);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
 
-            UserSetting userSettings = context.UserSettings.First(x => x.IdUser == idUser);
-            bool allowFolowOriginalState = userSettings.AllowFollowing;
-            userSettings.AllowFollowing = true;
-			
-			context.Entry(userSettings).State = EntityState.Modified;
-            if (context.SaveChanges() > 0)
-            {
-                JsonResult result = controller.FollowUser(idUser);
-                Assert.IsNotNull(result);
-                Assert.IsTrue(result.Data is JsonResponseVM);
-                Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
-            }
-			
-			
-			
-			userSettings.AllowFollowing = allowFolowOriginalState;
-			context.Entry(userSettings).State = EntityState.Modified;
-            context.UsersFollowings.Remove(context.UsersFollowings.Single(x => x.IdUser == _loginUser.UserId && x.IdUserToFollow == idUser));
-            context.SaveChanges();          
+
+            JsonResult result = controller.FollowUser(userId);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");       			      
         }
-		
-		
-		[TestMethod]
+
+
+
+        [TestMethod]
+        public void StopFollowingUser_IsFollowing()
+        {
+            int userId = 3;
+            _userRepoMock.Setup(m => m.IsFollowing(userId, _loginUser.UserId)).Returns(false);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
+
+
+            JsonResult result = controller.StopFollowingUser(userId);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR", "Ne možeš prestati pratiti korisnika kojeg ne pratiš");
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
+        }
+
+        [TestMethod]
+        public void StopFollowingUser_DatabaseSaveFailed()
+        {
+            int userId = 3;
+            _userRepoMock.Setup(m => m.IsFollowing(userId, _loginUser.UserId)).Returns(true);
+            _userRepoMock.Setup(m => m.StopFollowingUser(userId, _loginUser.UserId)).Returns(false);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
+
+
+            JsonResult result = controller.StopFollowingUser(userId);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR");
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
+        }
+
+
+
+        [TestMethod]
         public void StopFollowingUser()
         {
-			int idUser = 5;
-			bool allowFolowOriginalState = true;
-            Context context = Helper.GetContext(true);
+            int userId = 3;
+            _userRepoMock.Setup(m => m.IsFollowing(userId, _loginUser.UserId)).Returns(true);
+            _userRepoMock.Setup(m => m.StopFollowingUser(userId, _loginUser.UserId)).Returns(true);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
 
-            JsonResult result = _controller.StopFollowingUser(idUser);
-			Assert.IsNotNull(result);
-            Assert.IsTrue(result.Data is JsonResponseVM);
-            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR","Ne možeš prestati pratiti korisnika kojeg ne pratiš");
 
-			
-			result = _controller.FollowUser(idUser);
-			Assert.IsNotNull(result);
+            JsonResult result = controller.StopFollowingUser(userId);
+            Assert.IsNotNull(result);
             Assert.IsTrue(result.Data is JsonResponseVM);
             Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
-									
-		}
+        }
 		
 		[TestMethod]
         public void Friends()
