@@ -282,7 +282,7 @@ namespace NRAKO_IvanCicek.Controllers
 
         [AdminOnlyFilter]
         [HttpPost]
-        public ActionResult DenyPost(int postId)
+        public JsonResult DenyPost(int postId)
         {
             if (_postsRepo.DeletePost(postId, _loginUser))
             {

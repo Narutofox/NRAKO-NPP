@@ -12,7 +12,6 @@ using NRAKO_IvanCicek.Models.VM;
 
 namespace NPP_UnitTests
 {
-    //TODO
     [TestClass]
     public class PostControllerUnitTests
     {
@@ -517,6 +516,87 @@ namespace NPP_UnitTests
             Assert.IsTrue(result.Data is JsonResponseVM);
             Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR");
             Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
+        }
+
+        [TestMethod]
+        public void AcceptPost_PostDoesNotExist()
+        {
+            int postId = 2;
+            _postsRepoMock.Setup(m => m.GetPost(postId)).Returns((UserPost)null);
+
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.AcceptPost(postId);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR");
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
+        }
+
+        [TestMethod]
+        public void AcceptPost_DatabaseSaveFailed()
+        {
+            int postId = 2;
+            _postsRepoMock.Setup(m => m.GetPost(postId)).Returns(new UserPost());
+            _postsRepoMock.Setup(m => m.EditPost(It.IsAny<UserPost>())).Returns(false);
+
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.AcceptPost(postId);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR");
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
+        }
+
+        [TestMethod]
+        public void AcceptPost()
+        {
+            int postId = 2;
+            _postsRepoMock.Setup(m => m.GetPost(postId)).Returns(new UserPost());
+            _postsRepoMock.Setup(m => m.EditPost(It.IsAny<UserPost>())).Returns(true);
+
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.AcceptPost(postId);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
+        }
+
+
+        [TestMethod]
+        public void DenyPost_DatabaseSaveFailed()
+        {
+            int postId = 2;
+            _postsRepoMock.Setup(m => m.DeletePost(postId, _loginUser)).Returns(false);
+
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.DenyPost(postId);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR");
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
+        }
+
+        [TestMethod]
+        public void DenyPost()
+        {
+            int postId = 2;
+            _postsRepoMock.Setup(m => m.DeletePost(postId,_loginUser)).Returns(true);
+
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+
+            JsonResult result = controller.DenyPost(postId);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
         }
     }
 }
