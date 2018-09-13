@@ -1,7 +1,6 @@
-﻿using System;
-using System.Web.Mvc;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NRAKO_IvanCicek.Controllers;
+using System.Web.Mvc;
 
 namespace NPP_UnitTests
 {

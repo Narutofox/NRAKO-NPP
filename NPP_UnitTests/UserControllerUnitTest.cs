@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Linq;
-using System.Web.Mvc;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using System;
+using System.Collections.Generic;
+using System.Web.Mvc;
 using NRAKO_IvanCicek.Controllers;
-using NRAKO_IvanCicek.Helpers;
 using NRAKO_IvanCicek.Interfaces;
 using NRAKO_IvanCicek.Models;
 using NRAKO_IvanCicek.Models.VM;
