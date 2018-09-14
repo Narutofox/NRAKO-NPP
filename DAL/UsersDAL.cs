@@ -91,7 +91,7 @@ namespace NRAKO_IvanCicek.DAL
 
         public UserSetting GetUserSettings(int userId)
         {
-            return _context.UserSettings.Where(x => x.IdUser == userId).FirstOrDefault();
+            return _context.UserSettings.FirstOrDefault(x => x.IdUser == userId);
         }
 
         public User Get(int userId)
@@ -144,7 +144,8 @@ namespace NRAKO_IvanCicek.DAL
         public bool ChangePassword(ChangePassword changePassword, int userId)
         {
             User dbUser = Get(userId);
-            if (dbUser != null && dbUser.Password == Hashing.Hash(changePassword.OldPassword, dbUser.Salt) && changePassword.NewPassword == changePassword.ConfirmNewPassword)
+            if (dbUser != null && dbUser.Password == Hashing.Hash(changePassword.OldPassword, dbUser.Salt) 
+                               && changePassword.NewPassword == changePassword.ConfirmNewPassword)
             {
                 dbUser.Salt = Hashing.GetSalt();
                 dbUser.Password = Hashing.Hash(changePassword.NewPassword, dbUser.Salt);
@@ -160,7 +161,8 @@ namespace NRAKO_IvanCicek.DAL
         public IEnumerable<UserProfile> Search(string fullName)
         {
             String fullNameLower = fullName.ToLower();
-            return _context.Users.Where(x => (x.FirstName + " " + x.LastName).ToLower().Contains(fullNameLower) && x.RecordStatusId == (int)RecordStatus.Active)
+            return _context.Users.Where(x => (x.FirstName + " " + x.LastName).ToLower().Contains(fullNameLower) 
+                                             && x.RecordStatusId == (int)RecordStatus.Active)
                     .Select(x => new UserProfile { FirstName = x.FirstName, LastName = x.LastName, UserId = x.UserId });
         }
 
@@ -215,7 +217,12 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool SendFriendRequest(int userId, int loginUserId)
         {
-            _context.UserFriends.Add(new UserFriend { IdUser = loginUserId, IdUserToFriendList = userId, RequestAccepted = false });
+            _context.UserFriends.Add(new UserFriend
+            {
+                IdUser = loginUserId,
+                IdUserToFriendList = userId,
+                RequestAccepted = false
+            });
             return SaveChanges();
         }
 
@@ -223,7 +230,9 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool RemoveFriend(int userId, int loginUserId)
         {
-            _context.UserFriends.Remove(_context.UserFriends.Single(x=>x.IdUser == loginUserId && x.IdUserToFriendList == userId || x.IdUser == userId && x.IdUserToFriendList == loginUserId));
+            _context.UserFriends.Remove(_context.UserFriends.Single(x=>x.IdUser == loginUserId 
+                                                                       && x.IdUserToFriendList == userId || x.IdUser == userId
+                                                                       && x.IdUserToFriendList == loginUserId));
             return SaveChanges();
         }
 
@@ -235,7 +244,9 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool UnblockUser(int userId, int loginUserId)
         {
-            _context.UserBlacklists.Remove(_context.UserBlacklists.First(x => x.IdUser == loginUserId && x.IdUserToBlackList == userId || x.IdUser == userId && x.IdUserToBlackList == loginUserId));
+            _context.UserBlacklists.Remove(_context.UserBlacklists
+                .First(x => x.IdUser == loginUserId && x.IdUserToBlackList == userId || x.IdUser == userId 
+                            && x.IdUserToBlackList == loginUserId));
             return SaveChanges();
         }
 
@@ -266,7 +277,9 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool StopFollowingUser(int userId, int loginUserId)
         {
-            _context.UsersFollowings.Remove(_context.UsersFollowings.Single(x => x.IdUser == loginUserId && x.IdUserToFollow == userId || x.IdUser == userId && x.IdUserToFollow == loginUserId));
+            _context.UsersFollowings.Remove(_context.UsersFollowings
+                .Single(x => x.IdUser == loginUserId && x.IdUserToFollow == userId || x.IdUser == userId 
+                             && x.IdUserToFollow == loginUserId));
             return SaveChanges();
         }
 
@@ -277,7 +290,8 @@ namespace NRAKO_IvanCicek.DAL
            var list = (from uf in _context.UserFriends
              join sender in _context.Users on uf.IdUser equals sender.UserId
              join reciver in _context.Users on uf.IdUserToFriendList equals reciver.UserId
-             where (uf.IdUser == userId || uf.IdUserToFriendList == userId) && sender.RecordStatusId == (int)RecordStatus.Active && reciver.RecordStatusId == (int)RecordStatus.Active
+             where (uf.IdUser == userId || uf.IdUserToFriendList == userId) 
+                   && sender.RecordStatusId == (int)RecordStatus.Active && reciver.RecordStatusId == (int)RecordStatus.Active
              select new { UserFriend = uf, UserSender = sender, UserReciver = reciver }).ToList();
 
             foreach (var item in list)

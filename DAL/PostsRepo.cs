@@ -77,19 +77,21 @@ namespace NRAKO_IvanCicek.DAL
 
             if (loginUserId.HasValue)
             {
-                Boolean showFriendsOnlyData = _context.UserFriends.Any(x => x.RequestAccepted && ((x.IdUser == userId && x.IdUserToFriendList == loginUserId) || (x.IdUser == loginUserId && x.IdUserToFriendList == userId)));
-                if (showFriendsOnlyData)
-                {
-                    list = list.Where(x => x.UserPost.Visibility == (int)Visibility.Javno || x.UserPost.Visibility == (int)Visibility.Samo_Prijatelji);
-                }
-                else
-                {
-                    list = list.Where(x => x.UserPost.Visibility == (int)Visibility.Javno);
-                }
+                Boolean showFriendsOnlyData = _context.UserFriends
+                    .Any(x => x.RequestAccepted  
+                              && ((x.IdUser == userId 
+                              && x.IdUserToFriendList == loginUserId) || (x.IdUser == loginUserId 
+                              && x.IdUserToFriendList == userId)));
+
+                list = showFriendsOnlyData ? 
+                    list.Where(x => x.UserPost.Visibility == (int)Visibility.Javno 
+                                    || x.UserPost.Visibility == (int)Visibility.Samo_Prijatelji) : 
+                    list.Where(x => x.UserPost.Visibility == (int)Visibility.Javno);
             }
 
             List<int> postIds = list.Select(x => x.UserPost.PostId).ToList();
-            IList<PostCommentOrLike> commentOrLikes = _context.CommentOrLike.Where(x => postIds.Contains(x.IdPost) && x.RecordStatusId == (int)RecordStatus.Active).ToList();
+            IList<PostCommentOrLike> commentOrLikes = _context.CommentOrLike
+                .Where(x => postIds.Contains(x.IdPost) && x.RecordStatusId == (int)RecordStatus.Active).ToList();
             List<int> userIds = commentOrLikes.Select(x => x.IdUser).ToList();
             IList<User> commentUsers = _context.Users.Where(x => userIds.Contains(x.UserId)).ToList();
             foreach (var item in list)
@@ -103,10 +105,12 @@ namespace NRAKO_IvanCicek.DAL
 
                 if (commentOrLikes.Any(x => x.IdPost == item.UserPost.PostId))
                 {
-                    var commentsList = commentOrLikes.Where(x => x.IdPost == item.UserPost.PostId).OrderByDescending(x => x.DateAndTime).ToList();
+                    var commentsList = commentOrLikes.Where(x => x.IdPost == item.UserPost.PostId)
+                        .OrderByDescending(x => x.DateAndTime).ToList();
                     foreach (var commentOrLike in commentsList)
                     {
-                        commentOrLike.UserFullName = commentUsers.Where(x => x.UserId == commentOrLike.IdUser).Select(x => x.FirstName + " " + x.LastName).FirstOrDefault();
+                        commentOrLike.UserFullName = commentUsers.Where(x => x.UserId == commentOrLike.IdUser)
+                            .Select(x => x.FirstName + " " + x.LastName).FirstOrDefault();
                     }
                     item.UserPost.CommentsAndLikes = commentsList;
                 }
@@ -126,7 +130,8 @@ namespace NRAKO_IvanCicek.DAL
 
         public IEnumerable<UserPost> GetNews(int userId)
         {
-            var friendList = _context.UserFriends.Where(x => x.RequestAccepted && (x.IdUser == userId || x.IdUserToFriendList == userId)).ToList();
+            var friendList = _context.UserFriends
+                .Where(x => x.RequestAccepted && (x.IdUser == userId || x.IdUserToFriendList == userId)).ToList();
             var folowingList = _context.UsersFollowings.Where(x => x.IdUser == userId).ToList();
 
             IList<int> friendsUserIdsForPosts = new List<int>();
@@ -146,15 +151,19 @@ namespace NRAKO_IvanCicek.DAL
             friendsUserIdsForPosts.Add(userId);
             var list = (from ip in _context.UserPosts
                                          join u in _context.Users on ip.IdUser equals u.UserId
-                                         where u.RecordStatusId == (int)RecordStatus.Active && ip.RecordStatusId == (int)RecordStatus.Active && ip.Verified &&
+                                         where u.RecordStatusId == (int)RecordStatus.Active 
+                                               && ip.RecordStatusId == (int)RecordStatus.Active && ip.Verified &&
                                          (
-                                            friendsUserIdsForPosts.Contains(ip.IdUser) && (ip.Visibility == (int)Visibility.Javno || ip.Visibility == (int)Visibility.Samo_Prijatelji) ||
-                                            followingUserIdsForPosts.Contains(ip.IdUser) && ip.Visibility == (int)Visibility.Javno
+                                            friendsUserIdsForPosts.Contains(ip.IdUser) 
+                                            && (ip.Visibility == (int)Visibility.Javno || ip.Visibility == (int)Visibility.Samo_Prijatelji) ||
+                                            followingUserIdsForPosts.Contains(ip.IdUser) 
+                                            && ip.Visibility == (int)Visibility.Javno
                                          )
                                          select new { Post = ip, User = u }).ToList();
 
             List<int> postIds = list.Select(x => x.Post.PostId).ToList();
-            IList<PostCommentOrLike> commentOrLikes = _context.CommentOrLike.Where(x => postIds.Contains(x.IdPost) && x.RecordStatusId == (int)RecordStatus.Active).ToList();
+            IList<PostCommentOrLike> commentOrLikes = _context.CommentOrLike
+                .Where(x => postIds.Contains(x.IdPost) && x.RecordStatusId == (int)RecordStatus.Active).ToList();
             List<int> userIds = commentOrLikes.Select(x => x.IdUser).ToList();
             IList<User> commentUsers = _context.Users.Where(x => userIds.Contains(x.UserId)).ToList();
 
@@ -164,10 +173,12 @@ namespace NRAKO_IvanCicek.DAL
 
                 if (commentOrLikes.Any(x => x.IdPost == item.Post.PostId))
                 {
-                    var commentsList = commentOrLikes.Where(x => x.IdPost == item.Post.PostId).OrderByDescending(x => x.DateAndTime).ToList();
+                    var commentsList = commentOrLikes.Where(x => x.IdPost == item.Post.PostId)
+                        .OrderByDescending(x => x.DateAndTime).ToList();
                     foreach (var commentOrLike in commentsList)
                     {
-                        commentOrLike.UserFullName = commentUsers.Where(x => x.UserId == commentOrLike.IdUser).Select(x => x.FirstName + " " + x.LastName).FirstOrDefault();
+                        commentOrLike.UserFullName = commentUsers.Where(x => x.UserId == commentOrLike.IdUser)
+                            .Select(x => x.FirstName + " " + x.LastName).FirstOrDefault();
                     }
                     item.Post.CommentsAndLikes = commentsList;
                 }
@@ -191,7 +202,10 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool UpdateCommentOrLike(PostCommentOrLike commentOrLike)
         {
-            PostCommentOrLike commentOrLikeDb = _context.CommentOrLike.FirstOrDefault(x => x.PostCommentOrLikeId == commentOrLike.PostCommentOrLikeId && x.IdUser == commentOrLike.IdUser && x.RecordStatusId == (int)RecordStatus.Active);
+            PostCommentOrLike commentOrLikeDb = _context.CommentOrLike
+                .FirstOrDefault(x => x.PostCommentOrLikeId == commentOrLike.PostCommentOrLikeId 
+                                     && x.IdUser == commentOrLike.IdUser 
+                                     && x.RecordStatusId == (int)RecordStatus.Active);
             if (commentOrLikeDb != null)
             {
                 commentOrLikeDb.Comment = commentOrLike.Comment;
@@ -226,7 +240,9 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool EditPost(UserPost editPost)
         {
-            UserPost original = _context.UserPosts.FirstOrDefault(x => x.PostId == editPost.PostId && x.IdUser == editPost.IdUser && (x.Verified || editPost.Verified));
+            UserPost original = _context.UserPosts
+                .FirstOrDefault(x => x.PostId == editPost.PostId 
+                                     && x.IdUser == editPost.IdUser && (x.Verified || editPost.Verified));
             if (original != null)
             {
                 editPost.PostDateTime = original.PostDateTime;
@@ -242,7 +258,9 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool DeletePost(int postId,LoginUser user)
         {
-            UserPost post = _context.UserPosts.FirstOrDefault(x => x.PostId == postId && (x.IdUser == user.UserId || (user.UserTypeId == (int)UserType.Admin && !x.Verified)));
+            UserPost post = _context.UserPosts
+                .FirstOrDefault(x => x.PostId == postId 
+                                     && (x.IdUser == user.UserId || (user.UserTypeId == (int)UserType.Admin && !x.Verified)));
             if (post == null) return false;
             post.RecordStatusId = (int)RecordStatus.Deleted;
             post.LastUpdate = DateTime.Now;
@@ -259,7 +277,8 @@ namespace NRAKO_IvanCicek.DAL
                         join u in _context.Users on ip.IdUser equals u.UserId
                         join spi in _context.Users on sp.IdUser equals spi.UserId into spin
                         from spi in spin.DefaultIfEmpty()
-                        where ip.RecordStatusId == (int)RecordStatus.Active && ip.PostId == postId && u.RecordStatusId == (int)RecordStatus.Active
+                        where ip.RecordStatusId == (int)RecordStatus.Active && ip.PostId == postId 
+                                                                            && u.RecordStatusId == (int)RecordStatus.Active
                         select new { UserPost = ip, SharedPost = sp, PostUser = u, ShareUser = spi }).FirstOrDefault();
 
             if (post != null)
@@ -273,7 +292,8 @@ namespace NRAKO_IvanCicek.DAL
 
                 if (commentOrLikes.Any(x => x.IdPost == post.UserPost.PostId))
                 {
-                    post.UserPost.CommentsAndLikes = commentOrLikes.Where(x => x.IdPost == post.UserPost.PostId).OrderByDescending(x => x.DateAndTime).ToList();
+                    post.UserPost.CommentsAndLikes = commentOrLikes
+                        .Where(x => x.IdPost == post.UserPost.PostId).OrderByDescending(x => x.DateAndTime).ToList();
                 }
                 else
                 {
@@ -293,12 +313,15 @@ namespace NRAKO_IvanCicek.DAL
 
         public IEnumerable<PostCommentOrLike> GetCommentsAndLikes(int postId)
         {
-            IList<PostCommentOrLike> commentOrLikes = _context.CommentOrLike.Where(x => x.IdPost == postId && x.RecordStatusId == (int)RecordStatus.Active).OrderByDescending(x => x.DateAndTime).ToList() ;
+            IList<PostCommentOrLike> commentOrLikes = _context.CommentOrLike
+                .Where(x => x.IdPost == postId && x.RecordStatusId == (int)RecordStatus.Active)
+                .OrderByDescending(x => x.DateAndTime).ToList() ;
             IEnumerable<int> userIDs = commentOrLikes.Select(x => x.IdUser).Distinct();
             IList<User> users = _context.Users.Where(x => userIDs.Contains(x.UserId)).ToList();
             foreach (var commentOrLike in commentOrLikes)
             {
-                commentOrLike.UserFullName = users.Where(x => x.UserId == commentOrLike.IdUser).Select(x => x.FirstName + " " + x.LastName).FirstOrDefault();
+                commentOrLike.UserFullName = users.Where(x => x.UserId == commentOrLike.IdUser)
+                    .Select(x => x.FirstName + " " + x.LastName).FirstOrDefault();
             }
 
             return commentOrLikes;
@@ -306,7 +329,9 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool DeleteComment(int postCommentOrLikeId, int userId)
         {
-            PostCommentOrLike commentOrLike = _context.CommentOrLike.FirstOrDefault(x => x.PostCommentOrLikeId == postCommentOrLikeId && x.IdUser == userId && x.RecordStatusId == (int)RecordStatus.Active);
+            PostCommentOrLike commentOrLike = _context.CommentOrLike
+                .FirstOrDefault(x => x.PostCommentOrLikeId == postCommentOrLikeId 
+                                     && x.IdUser == userId && x.RecordStatusId == (int)RecordStatus.Active);
             return DeleteCommentOrLike(commentOrLike);
         }
 

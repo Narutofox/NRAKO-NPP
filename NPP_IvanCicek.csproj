@@ -165,7 +165,7 @@
     <Compile Include="Controllers\SignUpController.cs" />
     <Compile Include="Controllers\PostController.cs" />
     <Compile Include="Controllers\UserController.cs" />
-    <Compile Include="DAL\LoginDAL.cs" />
+    <Compile Include="DAL\LoginRepo.cs" />
     <Compile Include="DAL\PostsRepo.cs" />
     <Compile Include="DAL\UsersDAL.cs" />
     <Compile Include="Factories\DALFactory.cs" />

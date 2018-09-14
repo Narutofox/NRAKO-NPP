@@ -17,7 +17,7 @@ namespace NRAKO_IvanCicek.Factories
 
         public static ILoginDAL GetLoginDAL(Context context = null)
         {
-            return LoginDal.GetInstance(context);
+            return LoginRepo.GetInstance(context);
         }
 
         public static IPostsRepo GetPostDAL(Context context = null)
