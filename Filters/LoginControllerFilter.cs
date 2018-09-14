@@ -1,20 +1,20 @@
-﻿using NRAKO_IvanCicek.Helpers;
-using System.Web.Mvc;
+﻿using System.Web.Mvc;
 using System.Web.Routing;
+using NRAKO_IvanCicek.Helpers;
 
 namespace NRAKO_IvanCicek.Filters
 {
-    public class LoginRequiredFilter : ActionFilterAttribute
+    public class LoginControllerFilter : ActionFilterAttribute
     {
         public override void OnActionExecuting(ActionExecutingContext filterContext)
         {
-            if (MySession.Get("LoginUser") == null)
+            if (MySession.Get("LoginUser") != null && filterContext.ActionDescriptor.ActionName != "Logoff")
             {
                 filterContext.Result = new RedirectToRouteResult(new RouteValueDictionary {
-                    { "controller", "Login" },
+                    { "controller", "Home" },
                     { "action", "Index" }
                 });
-            }           
+            }
         }
     }
 }
