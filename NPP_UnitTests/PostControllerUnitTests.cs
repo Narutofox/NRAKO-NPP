@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
 using System.Linq;
 using System.Text;
@@ -30,7 +29,7 @@ namespace NPP_UnitTests
             _loginUser = Helper.GetLoginUser();
             _controller = new PostController(Helper.GetContext(), _loginUser);
             _postsRepoMock = new Mock<IPostsRepo>();
-            _postsRepoMock.Setup(m => m.GetVisibilityOptions()).Returns(new List<Visibility>());
+            _postsRepoMock.Setup(m => m.GetVisibilityOptions()).Returns(new List<EnumVM>());
         }
 
         [TestMethod]
@@ -125,7 +124,7 @@ namespace NPP_UnitTests
 
             controller.ModelState.AddModelError("UnitTest","TestError");
 
-            JsonResult result = controller.CreatePost(newPost,null);
+            JsonResult result = controller.CreatePost(newPost);
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.Data);
             Assert.IsTrue(result.Data is JsonResponseVM);
@@ -147,7 +146,7 @@ namespace NPP_UnitTests
             _postsRepoMock.Setup(m => m.CreatePost(newPost)).Returns(true);
             PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
 
-            JsonResult result = controller.CreatePost(newPost, null);
+            JsonResult result = controller.CreatePost(newPost);
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.Data);
             Assert.IsTrue(result.Data is JsonResponseVM);
@@ -263,7 +262,7 @@ namespace NPP_UnitTests
 
             controller.ModelState.AddModelError("UnitTest", "TestError");
 
-            JsonResult result = controller.EditPost(editPost, null);
+            JsonResult result = controller.EditPost(editPost);
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.Data);
             Assert.IsTrue(result.Data is JsonResponseVM);
@@ -286,7 +285,7 @@ namespace NPP_UnitTests
             _postsRepoMock.Setup(m => m.EditPost(editPost)).Returns(false);
             PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
 
-            JsonResult result = controller.EditPost(editPost, null);
+            JsonResult result = controller.EditPost(editPost);
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.Data);
             Assert.IsTrue(result.Data is JsonResponseVM);
@@ -308,7 +307,7 @@ namespace NPP_UnitTests
             _postsRepoMock.Setup(m => m.EditPost(editPost)).Returns(true);
             PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
 
-            JsonResult result = controller.EditPost(editPost, null);
+            JsonResult result = controller.EditPost(editPost);
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.Data);
             Assert.IsTrue(result.Data is JsonResponseVM);
@@ -528,8 +527,10 @@ namespace NPP_UnitTests
         public void CheckIfAnyMoreComments()
         {
             int postId = 2;
-            List<PostCommentOrLike> list = new List<PostCommentOrLike>();
-            list.Add(new PostCommentOrLike());
+            List<PostCommentOrLike> list = new List<PostCommentOrLike>
+            {
+                new PostCommentOrLike()
+            };
 
             _postsRepoMock.Setup(m => m.GetCommentsAndLikes(postId)).Returns(list);
             PostController controller = new PostController(_postsRepoMock.Object, _loginUser);

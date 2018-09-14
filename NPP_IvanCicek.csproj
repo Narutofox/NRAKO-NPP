@@ -198,6 +198,7 @@
     <Compile Include="Models\UserProfile.cs" />
     <Compile Include="Models\UserSetting.cs" />
     <Compile Include="Models\VM\ChangePassword.cs" />
+    <Compile Include="Models\VM\EnumVM.cs" />
     <Compile Include="Models\VM\JsonResponseVM.cs" />
     <Compile Include="Models\VM\Login.cs" />
     <Compile Include="Models\VM\SignUp.cs" />

@@ -226,7 +226,7 @@ namespace NRAKO_IvanCicek.DAL
                 x.RecordStatusId == (int)RecordStatus.Active);
         }
 
-        public dynamic GetVisibilityOptions()
+        public IEnumerable<EnumVM> GetVisibilityOptions()
         {
             List<Visibility> values = new List<Visibility>();
             foreach (Visibility item in Enum.GetValues(typeof(Visibility)))
@@ -235,7 +235,7 @@ namespace NRAKO_IvanCicek.DAL
             }
 
             return from Visibility e in values
-                   select new { Id = (int)e, Name = e.ToString().Replace("_", " ") };
+                   select new EnumVM { Id = (int)e, Name = e.ToString().Replace("_", " ") };
         }
 
         public bool EditPost(UserPost editPost)

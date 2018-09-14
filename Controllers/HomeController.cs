@@ -15,10 +15,11 @@ namespace NRAKO_IvanCicek.Controllers
             _postsRepo = DalFactory.GetPostsRepo();
         }
 
-        public HomeController(Context context)
+        public HomeController(IPostsRepo postsRepo)
         {
-            _postsRepo = DalFactory.GetPostsRepo(context);
+            _postsRepo = postsRepo;
         }
+
         public ViewResult Index()
         {
             ViewBag.VisibilityOptions = _postsRepo.GetVisibilityOptions();

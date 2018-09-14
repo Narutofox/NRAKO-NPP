@@ -17,7 +17,7 @@ namespace NRAKO_IvanCicek.Interfaces
         bool CreateCommentOrLike(PostCommentOrLike commentOrLike);
         bool UpdateCommentOrLike(PostCommentOrLike commentOrLike);
         PostCommentOrLike GetCommentOrLike(int postCommentOrLikeId);
-        dynamic GetVisibilityOptions();
+        IEnumerable<EnumVM> GetVisibilityOptions();
         bool EditPost(UserPost editPost);
         UserPost GetPost(int postId);
         bool DeletePost(int postId, LoginUser user);
