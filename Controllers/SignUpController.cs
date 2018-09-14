@@ -1,15 +1,9 @@
-﻿using NRAKO_IvanCicek.DAL;
-using NRAKO_IvanCicek.Factories;
+﻿using NRAKO_IvanCicek.Factories;
 using NRAKO_IvanCicek.Helpers;
 using NRAKO_IvanCicek.Interfaces;
 using NRAKO_IvanCicek.Models;
 using NRAKO_IvanCicek.Models.VM;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using System.Web.Mvc;
-using System.Web.Routing;
 using NRAKO_IvanCicek.Filters;
 
 namespace NRAKO_IvanCicek.Controllers
@@ -17,15 +11,15 @@ namespace NRAKO_IvanCicek.Controllers
     [SignUpControllerFilter]
     public class SignUpController : Controller
     {
-        readonly IUserDAL userDAL;
+        readonly IUserDAL _userDal;
         public SignUpController()
         {
-            userDAL = DALFactory.GetUserDAL();
+            _userDal = DALFactory.GetUserDAL();
         }
 
         public SignUpController(Context context)
         {
-            userDAL = DALFactory.GetUserDAL(context);
+            _userDal = DALFactory.GetUserDAL(context);
         }
 
         // GET: SignUp
@@ -52,7 +46,7 @@ namespace NRAKO_IvanCicek.Controllers
                 user.RecordStatusId = (int)RecordStatus.Active;
                 user.UserTypeId = (int)UserType.Normal;
 
-                if (userDAL.Create(user))
+                if (_userDal.Create(user))
                 {
                     MySession.Set("LoginUser", new LoginUser
                     {

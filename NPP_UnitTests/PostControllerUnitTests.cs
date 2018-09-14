@@ -170,7 +170,6 @@ namespace NPP_UnitTests
             Mock<HttpContextBase> contextMock = new Mock<HttpContextBase>();
             Mock<HttpPostedFileBase> file = new Mock<HttpPostedFileBase>();
 
-            // The required properties from my Controller side
             MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes("Hello"));
 
             file.Setup(x => x.InputStream).Returns(stream);

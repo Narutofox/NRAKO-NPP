@@ -7,6 +7,7 @@ using NRAKO_IvanCicek.Models.VM;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -18,16 +19,18 @@ namespace NRAKO_IvanCicek.Controllers
     {
         IUserDAL userDAL;
         LoginUser LoginUser;
+        private readonly IFileSystem _fileSystem;
         public SettingsController()
         {
             userDAL = DALFactory.GetUserDAL();
             LoginUser = (LoginUser)MySession.Get("LoginUser");
         }
 
-        public SettingsController(Context context, LoginUser loginUser)
+        public SettingsController(IUserDAL userRepo, LoginUser loginUser, IFileSystem fileSystem = null)
         {
-            userDAL = DALFactory.GetUserDAL(context);
+            userDAL = userRepo;
             LoginUser = loginUser;
+            _fileSystem = fileSystem ?? new FileSystem();
         }
 
         // GET: Settings
@@ -88,10 +91,10 @@ namespace NRAKO_IvanCicek.Controllers
                 if (Helper.CheckImageTypeAllowed(FileType))
                 {
                     user.ProfileImagePath = "~/Content/UserProfileImages/" + LoginUser.UserId + "/" + profileImage.FileName;
-                    string FolderPath = Server.MapPath("~/Content/UserProfileImages/" + LoginUser.UserId);
-                    if (!Directory.Exists(FolderPath))
+                    string folderPath = Server.MapPath("~/Content/UserProfileImages/" + LoginUser.UserId);
+                    if (!_fileSystem.Directory.Exists(folderPath))
                     {
-                        Directory.CreateDirectory(FolderPath);
+                        _fileSystem.Directory.CreateDirectory(folderPath);
                     }
                 }
                 else
