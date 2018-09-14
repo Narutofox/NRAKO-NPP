@@ -1,7 +1,7 @@
 ﻿@using NRAKO_IvanCicek.Helpers
 @using NRAKO_IvanCicek.Models.VM;
 @{
-    var LoginUser = MySession.Get("LoginUser");
+    var loginUser = MySession.Get("LoginUser");
 }
 <!DOCTYPE html>
 <html>
@@ -65,7 +65,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-            @if (LoginUser != null)
+            @if (loginUser != null)
             {
                 @Html.ActionLink("NRAKO", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
             }
@@ -76,7 +76,7 @@
             </div>
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                @if (LoginUser != null)
+                @if (loginUser != null)
                 {
                     <li>@Html.ActionLink("Novosti", "Index", "Home")</li>
                     <li>@Html.ActionLink("Prijatelji", "Friends", "User")</li>
@@ -87,7 +87,7 @@
                 }
                 </ul>
 
-                @if (LoginUser == null)
+                @if (loginUser == null)
                 {
                     <ul class="nav navbar-nav navbar-right">
                         <li>@Html.ActionLink("Prijava", "Index", "Login")</li>
@@ -97,11 +97,11 @@
                 else
                 {
                     <ul class="nav navbar-nav navbar-right">
-                        @if ((LoginUser as LoginUser).UserTypeId == (int)UserType.Admin)
+                        @if ((loginUser as LoginUser).UserTypeId == (int)UserType.Admin)
                         {
                             <li>@Html.ActionLink("Admin panel", "AdminPanel", "User")</li>
                         }
-                        <li>@Html.ActionLink("Moj profil", "Index", "User",new { id = (LoginUser as LoginUser).UserId },null)</li>
+                        <li>@Html.ActionLink("Moj profil", "Index", "User",new { id = (loginUser as LoginUser).UserId },null)</li>
                         <li>@Html.ActionLink("Postavke", "Index", "Settings")</li>
                         <li>@Html.ActionLink("Odjava", "Logoff", "Login")</li>
                     </ul>

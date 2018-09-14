@@ -3,7 +3,7 @@
 @using NRAKO_IvanCicek.Models.VM;
 @{
     ViewBag.Title = Model.Fullname;
-    var login = MySession.Get("LoginUser") as LoginUser;
+    LoginUser login = MySession.Get("LoginUser") as LoginUser;
 }
 <script src="~/Content/tinymce/tinymce.min.js"></script>
 <script src="~/Content/tinymce/tinymceFonts.js"></script>
