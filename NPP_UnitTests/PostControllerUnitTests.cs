@@ -20,61 +20,73 @@ namespace NPP_UnitTests
     [TestClass]
     public class PostControllerUnitTests
     {
-        private PostController _controller;
         private LoginUser _loginUser;
         private Mock<IPostsRepo> _postsRepoMock;
         [TestInitialize]
         public void Initialize()
         {
             _loginUser = Helper.GetLoginUser();
-            _controller = new PostController(Helper.GetContext(), _loginUser);
             _postsRepoMock = new Mock<IPostsRepo>();
-            _postsRepoMock.Setup(m => m.GetVisibilityOptions()).Returns(new List<EnumVM>());
+            _postsRepoMock.Setup(m => m.GetVisibilityOptions()).Returns(new List<EnumVM>().AsEnumerable());
         }
 
         [TestMethod]
         public void GetLoginUserPosts()
         {
-            PartialViewResult result = _controller.GetUserPosts();
+            IEnumerable<UserPost> userPosts = new List<UserPost>();
+            _postsRepoMock.Setup(m => m.GetUserPosts(_loginUser.UserId)).Returns(userPosts);
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+            PartialViewResult result = controller.GetUserPosts();
 
             Assert.IsNotNull(result);
             Assert.IsTrue(result.ViewName == "_Posts");
             Assert.IsNotNull(result.Model);
             Assert.IsTrue(result.Model is IEnumerable<UserPost>);
-            Assert.IsNotNull(_controller.ViewBag.VisibilityOptions);
-            Assert.IsNotNull(_controller.ViewBag.Scripts);
-            CollectionAssert.AreEqual(_controller.PostsRepo.GetUserPosts(_loginUser.UserId).ToList(), (result.Model as IEnumerable<UserPost>).ToList());
+            Assert.IsNotNull(controller.ViewBag.VisibilityOptions);
+            Assert.IsTrue(controller.ViewBag.VisibilityOptions is IEnumerable<EnumVM>);
+            Assert.IsTrue(controller.ViewBag.Scripts is IEnumerable<String>);
+            CollectionAssert.AreEqual(userPosts.ToList(), (result.Model as IEnumerable<UserPost>).ToList());
         }
 
         [TestMethod]
         public void GetUserPosts()
         {
             int userId = 2;
-            PartialViewResult result = _controller.GetUserPosts(userId);
+            IEnumerable<UserPost> userPosts = new List<UserPost>();
+            _postsRepoMock.Setup(m => m.GetUserPosts(userId)).Returns(userPosts);
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+            PartialViewResult result = controller.GetUserPosts(userId);
             
 
             Assert.IsNotNull(result);
             Assert.IsTrue(result.ViewName == "_Posts");
             Assert.IsNotNull(result.Model);
             Assert.IsTrue(result.Model is IEnumerable<UserPost>);
-            Assert.IsNotNull(_controller.ViewBag.VisibilityOptions);
-            Assert.IsNotNull(_controller.ViewBag.Scripts);
-            CollectionAssert.AreEqual(_controller.PostsRepo.GetProfileUserPosts(userId,_loginUser.UserId).ToList(), (result.Model as IEnumerable<UserPost>).ToList());
+            Assert.IsNotNull(controller.ViewBag.VisibilityOptions);
+            Assert.IsNotNull(controller.ViewBag.Scripts);
+            Assert.IsTrue(controller.ViewBag.VisibilityOptions is IEnumerable<EnumVM>);
+            Assert.IsTrue(controller.ViewBag.Scripts is IEnumerable<String>);
+            CollectionAssert.AreEqual(userPosts.ToList(), (result.Model as IEnumerable<UserPost>).ToList());
         }
 
 
         [TestMethod]
         public void GetNews()
         {
-            PartialViewResult result = _controller.GetNews();
+            IEnumerable<UserPost> userPosts = new List<UserPost>();
+            _postsRepoMock.Setup(m => m.GetNews(_loginUser.UserId)).Returns(userPosts);
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
+            PartialViewResult result = controller.GetNews();
 
             Assert.IsNotNull(result);
             Assert.IsTrue(result.ViewName == "_Posts");
             Assert.IsNotNull(result.Model);
             Assert.IsTrue(result.Model is IEnumerable<UserPost>);
-            Assert.IsNotNull(_controller.ViewBag.VisibilityOptions);
-            Assert.IsNotNull(_controller.ViewBag.Scripts);
-            CollectionAssert.AreEqual(_controller.PostsRepo.GetNews(_loginUser.UserId).ToList(), (result.Model as IEnumerable<UserPost>).ToList());
+            Assert.IsNotNull(controller.ViewBag.VisibilityOptions);
+            Assert.IsNotNull(controller.ViewBag.Scripts);
+            Assert.IsTrue(controller.ViewBag.VisibilityOptions is IEnumerable<EnumVM>);
+            Assert.IsTrue(controller.ViewBag.Scripts is IEnumerable<String>);
+            CollectionAssert.AreEqual(userPosts.ToList(), (result.Model as IEnumerable<UserPost>).ToList());
         }
 
         [TestMethod]

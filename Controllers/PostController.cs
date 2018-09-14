@@ -17,43 +17,36 @@ namespace NRAKO_IvanCicek.Controllers
     [LoginRequiredFilter]
     public class PostController : Controller
     {
-        public readonly IPostsRepo PostsRepo;
+        private readonly IPostsRepo _postsRepo;
         private readonly LoginUser _loginUser;
         private readonly IFileSystem _fileSystem;
 
         public PostController()
         {
-            PostsRepo = DalFactory.GetPostsRepo();
+            _postsRepo = DalFactory.GetPostsRepo();
             _loginUser = (LoginUser)MySession.Get("LoginUser");
-            _fileSystem = new FileSystem();
-        }
-
-        public PostController(Context context, LoginUser loginUser)
-        {
-            PostsRepo = DalFactory.GetPostsRepo(context);
-            _loginUser = loginUser;
             _fileSystem = new FileSystem();
         }
 
         public PostController(IPostsRepo postsRepo, LoginUser loginUser, IFileSystem fileSystem = null)
         {
-            PostsRepo = postsRepo;
+            _postsRepo = postsRepo;
             _loginUser = loginUser;
             _fileSystem = fileSystem ?? new FileSystem();
         }
 
         public PartialViewResult GetUserPosts(int? userId= null)
         {
-            ViewBag.VisibilityOptions = PostsRepo.GetVisibilityOptions();
+            ViewBag.VisibilityOptions = _postsRepo.GetVisibilityOptions();
             IEnumerable<UserPost> posts;
 
             if (userId.HasValue && userId.Value != _loginUser.UserId)
             {
-                posts = PostsRepo.GetProfileUserPosts(userId.Value, _loginUser.UserId);
+                posts = _postsRepo.GetProfileUserPosts(userId.Value, _loginUser.UserId);
             }
             else
             {
-                posts = PostsRepo.GetUserPosts(_loginUser.UserId);
+                posts = _postsRepo.GetUserPosts(_loginUser.UserId);
             }
 
             ViewBag.Scripts = posts.Where(x => !String.IsNullOrEmpty(x.CanvasJavascriptFilePath)).Select(x => x.CanvasJavascriptFilePath);
@@ -62,16 +55,16 @@ namespace NRAKO_IvanCicek.Controllers
 
         public PartialViewResult GetNews()
         {
-            ViewBag.VisibilityOptions = PostsRepo.GetVisibilityOptions();
-            IEnumerable<UserPost> news = PostsRepo.GetNews(_loginUser.UserId);
+            ViewBag.VisibilityOptions = _postsRepo.GetVisibilityOptions();
+            IEnumerable<UserPost> news = _postsRepo.GetNews(_loginUser.UserId);
             ViewBag.Scripts = news.Where(x => !String.IsNullOrEmpty(x.CanvasJavascriptFilePath)).Select(x => x.CanvasJavascriptFilePath);
             return PartialView("_Posts", news);
         }
 
         public PartialViewResult AddNewPost(int postId)
         {
-            UserPost post = PostsRepo.GetPost(postId);
-            ViewBag.VisibilityOptions = PostsRepo.GetVisibilityOptions();
+            UserPost post = _postsRepo.GetPost(postId);
+            ViewBag.VisibilityOptions = _postsRepo.GetVisibilityOptions();
             if (post.Verified)
             {
                 return PartialView("_AddNewPost", post);
@@ -94,7 +87,7 @@ namespace NRAKO_IvanCicek.Controllers
                 newPost.CanvasJavascriptFilePath = "~/Content/UserFiles/" + _loginUser.UserId + "/" + Guid.NewGuid().ToString()+ ".js";
             }
 
-            if (ModelState.IsValid && PostsRepo.CreatePost(newPost))
+            if (ModelState.IsValid && _postsRepo.CreatePost(newPost))
             {
                 if (javascriptFile != null && !String.IsNullOrEmpty(newPost.CanvasJavascriptFilePath))
                 {
@@ -121,7 +114,7 @@ namespace NRAKO_IvanCicek.Controllers
         [HttpGet]
         public JsonResult GetPost(int postId)
         {
-            return Json(PostsRepo.GetPost(postId),JsonRequestBehavior.AllowGet);
+            return Json(_postsRepo.GetPost(postId),JsonRequestBehavior.AllowGet);
         }
 
         [HttpPost]
@@ -135,7 +128,7 @@ namespace NRAKO_IvanCicek.Controllers
                 editPost.CanvasJavascriptFilePath = "~/Content/UserFiles/" + _loginUser.UserId + "/" +Guid.NewGuid().ToString() + ".js";
             }
 
-            if (ModelState.IsValid && PostsRepo.EditPost(editPost))
+            if (ModelState.IsValid && _postsRepo.EditPost(editPost))
             {
                 if (javascriptFile != null &&  !String.IsNullOrEmpty(editPost.CanvasJavascriptFilePath))
                 {
@@ -164,7 +157,7 @@ namespace NRAKO_IvanCicek.Controllers
         public JsonResult DeletePost(int postId)
         {
             
-            if (PostsRepo.DeletePost(postId, _loginUser))
+            if (_postsRepo.DeletePost(postId, _loginUser))
             {
                 return Json(new JsonResponseVM { Result = "OK" });
             }
@@ -182,7 +175,7 @@ namespace NRAKO_IvanCicek.Controllers
 
         public PartialViewResult PostComments(int postId)
         {
-            IEnumerable<PostCommentOrLike> list = PostsRepo.GetCommentsAndLikes(postId);
+            IEnumerable<PostCommentOrLike> list = _postsRepo.GetCommentsAndLikes(postId);
             return PartialView("_PostComments", list);
         }
 
@@ -192,7 +185,7 @@ namespace NRAKO_IvanCicek.Controllers
             if (!String.IsNullOrEmpty(comment))
             {
                 PostCommentOrLike postComment = new PostCommentOrLike { IdPost = idPost, Comment = comment, IdUser = _loginUser.UserId };
-                if (PostsRepo.CreateCommentOrLike(postComment))
+                if (_postsRepo.CreateCommentOrLike(postComment))
                 {
                     return Json(new JsonResponseVM { Result = "OK", PostId = postComment.IdPost });
                 }
@@ -212,7 +205,7 @@ namespace NRAKO_IvanCicek.Controllers
             if (!String.IsNullOrEmpty(comment))
             {
                 PostCommentOrLike commentModel = new PostCommentOrLike { Comment = comment, PostCommentOrLikeId = postCommentOrLikeId, IdUser = _loginUser.UserId };
-                if (PostsRepo.UpdateCommentOrLike(commentModel))
+                if (_postsRepo.UpdateCommentOrLike(commentModel))
                 {
                     return Json(new JsonResponseVM { Result = "OK", PostId = idPost });
                 }
@@ -228,7 +221,7 @@ namespace NRAKO_IvanCicek.Controllers
         [HttpPost]
         public JsonResult DeleteCommentOrLike(int postCommentOrLikeId)
         {
-               if( PostsRepo.DeleteComment(postCommentOrLikeId, _loginUser.UserId))
+               if( _postsRepo.DeleteComment(postCommentOrLikeId, _loginUser.UserId))
                 {
                     return Json(new JsonResponseVM { Result = "OK" });
                 }
@@ -238,7 +231,7 @@ namespace NRAKO_IvanCicek.Controllers
         [HttpPost]
         public JsonResult ChekIfAnyMoreComments(int postId)
         {
-            if (PostsRepo.GetCommentsAndLikes(postId).Any())
+            if (_postsRepo.GetCommentsAndLikes(postId).Any())
             {
                 return Json(true);
             }
@@ -251,7 +244,7 @@ namespace NRAKO_IvanCicek.Controllers
         {
             like.IdUser = _loginUser.UserId;
             like.DoYouLike = true;
-            if (PostsRepo.CreateCommentOrLike(like)){
+            if (_postsRepo.CreateCommentOrLike(like)){
                 return Json(new JsonResponseVM { Result = "OK" });
             }
             return Json(new JsonResponseVM { Result = "ERROR", Msg = "Pogreska" });
@@ -260,7 +253,7 @@ namespace NRAKO_IvanCicek.Controllers
         [HttpPost]
         public JsonResult Unlike(int postId)
         {
-            if(PostsRepo.DeleteLike(postId, _loginUser.UserId))
+            if(_postsRepo.DeleteLike(postId, _loginUser.UserId))
             {
                 return Json(new JsonResponseVM { Result = "OK" });
             }
@@ -271,11 +264,11 @@ namespace NRAKO_IvanCicek.Controllers
         [HttpPost]
         public JsonResult AcceptPost(int postId)
         {
-            UserPost post = PostsRepo.GetPost(postId);
+            UserPost post = _postsRepo.GetPost(postId);
             if (post != null)
             {
                 post.Verified = true;
-                if (PostsRepo.EditPost(post))
+                if (_postsRepo.EditPost(post))
                 {
                     return Json(new JsonResponseVM { Result = "OK" });
                 }
@@ -288,7 +281,7 @@ namespace NRAKO_IvanCicek.Controllers
         [HttpPost]
         public JsonResult DenyPost(int postId)
         {
-            if (PostsRepo.DeletePost(postId, _loginUser))
+            if (_postsRepo.DeletePost(postId, _loginUser))
             {
                 return Json(new JsonResponseVM { Result = "OK" });
             }
