@@ -191,7 +191,7 @@ namespace NPP_UnitTests
         public void RemoveFriend_DatabaseSaveFailed()
         {
             int userId = 3;
-            _userRepoMock.Setup(m => m.IsOnFriendList(userId, _loginUser.UserId)).Returns(false);
+            _userRepoMock.Setup(m => m.IsOnFriendList(userId, _loginUser.UserId)).Returns(true);
             _userRepoMock.Setup(m => m.RemoveFriend(userId, _loginUser.UserId)).Returns(false);
             UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
 

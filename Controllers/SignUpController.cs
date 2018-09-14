@@ -10,22 +10,13 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
+using NRAKO_IvanCicek.Filters;
 
 namespace NRAKO_IvanCicek.Controllers
 {
+    [SignUpControllerFilter]
     public class SignUpController : Controller
     {
-        protected override void OnActionExecuting(ActionExecutingContext filterContext)
-        {
-            if (MySession.Get("LoginUser") != null)
-            {
-                filterContext.Result = new RedirectToRouteResult(new RouteValueDictionary {
-                    { "controller", "Home" },
-                    { "action", "Index" }
-                });
-            }
-        }
-
         readonly IUserDAL userDAL;
         public SignUpController()
         {

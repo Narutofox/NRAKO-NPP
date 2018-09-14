@@ -7,6 +7,7 @@ using NRAKO_IvanCicek.Models.VM;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -18,23 +19,27 @@ namespace NRAKO_IvanCicek.Controllers
     {
         public readonly IPostsRepo PostsRepo;
         private readonly LoginUser _loginUser;
+        private readonly IFileSystem _fileSystem;
 
         public PostController()
         {
             PostsRepo = DALFactory.GetPostDAL();
             _loginUser = (LoginUser)MySession.Get("LoginUser");
+            _fileSystem = new FileSystem();
         }
 
         public PostController(Context context, LoginUser loginUser)
         {
             PostsRepo = DALFactory.GetPostDAL(context);
             _loginUser = loginUser;
+            _fileSystem = new FileSystem();
         }
 
-        public PostController(IPostsRepo postsRepo, LoginUser loginUser)
+        public PostController(IPostsRepo postsRepo, LoginUser loginUser, IFileSystem fileSystem = null)
         {
             PostsRepo = postsRepo;
             _loginUser = loginUser;
+            _fileSystem = fileSystem ?? new FileSystem();
         }
 
         public PartialViewResult GetUserPosts(int? userId= null)
@@ -94,9 +99,9 @@ namespace NRAKO_IvanCicek.Controllers
                 if (javascriptFile != null && !String.IsNullOrEmpty(newPost.CanvasJavascriptFilePath))
                 {
                     string folderPath = Server.MapPath(HardcodedValues.UserFiles + _loginUser.UserId);
-                    if (!Directory.Exists(folderPath))
+                    if (!_fileSystem.Directory.Exists(folderPath))
                     {
-                        Directory.CreateDirectory(folderPath);
+                        _fileSystem.Directory.CreateDirectory(folderPath);
                     }
                     javascriptFile.SaveAs(Server.MapPath(newPost.CanvasJavascriptFilePath));
                     return Json(new JsonResponseVM { Result = "OK", Msg = "Vaša objava će biti dostupna nakon potvrde administratora" });
@@ -135,9 +140,9 @@ namespace NRAKO_IvanCicek.Controllers
                 if (javascriptFile != null &&  !String.IsNullOrEmpty(editPost.CanvasJavascriptFilePath))
                 {
                     string folderPath = Server.MapPath(HardcodedValues.UserFiles + _loginUser.UserId);
-                    if (!Directory.Exists(folderPath))
+                    if (!_fileSystem.Directory.Exists(folderPath))
                     {
-                        Directory.CreateDirectory(folderPath);
+                        _fileSystem.Directory.CreateDirectory(folderPath);
                     }
                     javascriptFile.SaveAs(Server.MapPath(editPost.CanvasJavascriptFilePath));
                     return Json(new JsonResponseVM { Result = "OK", PostId = editPost.PostId, Msg = "Vaša objava će biti dostupna nakon potvrde administratora" });

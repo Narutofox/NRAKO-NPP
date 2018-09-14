@@ -1,7 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Abstractions;
+using System.IO.Abstractions.TestingHelpers;
 using System.Linq;
+using System.Text;
+using System.Web;
 using System.Web.Mvc;
+using System.Web.Routing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using NRAKO_IvanCicek.Controllers;
@@ -150,6 +156,51 @@ namespace NPP_UnitTests
         }
 
         [TestMethod]
+        public void CreatePost_WithFile()
+        {
+            UserPost newPost = new UserPost
+            {
+                Verified = false,
+                RecordStatusId = (int)RecordStatus.Active,
+                IdUser = 2,
+                Text = "Test",
+                PostId = 1
+            };
+
+            Mock<HttpContextBase> contextMock = new Mock<HttpContextBase>();
+            Mock<HttpPostedFileBase> file = new Mock<HttpPostedFileBase>();
+
+            // The required properties from my Controller side
+            MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes("Hello"));
+
+            file.Setup(x => x.InputStream).Returns(stream);
+            file.Setup(x => x.ContentLength).Returns((int)stream.Length);
+            file.Setup(x => x.FileName).Returns("Test.js");
+            string basePath = @"c:\yourPath\App";
+
+            contextMock.Setup(x => x.Server.MapPath(It.IsAny<String>())).Returns(basePath);
+            file.Setup(x => x.SaveAs(It.IsAny<String>())).Verifiable();
+           
+
+            string folderPath = basePath + HardcodedValues.UserFiles + _loginUser.UserId;
+            var fakeFileSystem = 
+                new MockFileSystem(new Dictionary<string, MockFileData> { { folderPath, new MockDirectoryData() } });
+
+            _postsRepoMock.Setup(m => m.CreatePost(newPost)).Returns(true);
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser, fakeFileSystem);
+
+            RequestContext rc = new RequestContext(contextMock.Object, new RouteData());
+            controller.ControllerContext = new ControllerContext(rc, controller);
+
+            JsonResult result = controller.CreatePost(newPost, file.Object);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
+        }
+
+        [TestMethod]
         public void GetPost()
         {
             UserPost newPost = new UserPost
@@ -213,7 +264,7 @@ namespace NPP_UnitTests
 
             controller.ModelState.AddModelError("UnitTest", "TestError");
 
-            JsonResult result = controller.CreatePost(editPost, null);
+            JsonResult result = controller.EditPost(editPost, null);
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.Data);
             Assert.IsTrue(result.Data is JsonResponseVM);
@@ -236,11 +287,12 @@ namespace NPP_UnitTests
             _postsRepoMock.Setup(m => m.EditPost(editPost)).Returns(false);
             PostController controller = new PostController(_postsRepoMock.Object, _loginUser);
 
-            JsonResult result = controller.CreatePost(editPost, null);
+            JsonResult result = controller.EditPost(editPost, null);
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.Data);
             Assert.IsTrue(result.Data is JsonResponseVM);
             Assert.IsTrue((result.Data as JsonResponseVM).Result == "ERROR");
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
         }
 
         [TestMethod]
@@ -263,6 +315,51 @@ namespace NPP_UnitTests
             Assert.IsTrue(result.Data is JsonResponseVM);
             Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
             Assert.IsTrue((result.Data as JsonResponseVM).PostId == editPost.PostId);
+        }
+
+        [TestMethod]
+        public void EditPost_WithFile()
+        {
+            UserPost editPost = new UserPost
+            {
+                Verified = false,
+                RecordStatusId = (int) RecordStatus.Active,
+                IdUser = 2,
+                Text = "Test",
+                PostId = 1
+            };
+
+            Mock<HttpContextBase> contextMock = new Mock<HttpContextBase>();
+            Mock<HttpPostedFileBase> file = new Mock<HttpPostedFileBase>();
+
+            // The required properties from my Controller side
+            MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes("Hello"));
+
+            file.Setup(x => x.InputStream).Returns(stream);
+            file.Setup(x => x.ContentLength).Returns((int) stream.Length);
+            file.Setup(x => x.FileName).Returns("Test.js");
+            string basePath = @"c:\yourPath\App";
+
+            contextMock.Setup(x => x.Server.MapPath(It.IsAny<String>())).Returns(basePath);
+            file.Setup(x => x.SaveAs(It.IsAny<String>())).Verifiable();
+
+
+            string folderPath = basePath + HardcodedValues.UserFiles + _loginUser.UserId;
+            var fakeFileSystem =
+                new MockFileSystem(new Dictionary<string, MockFileData> {{folderPath, new MockDirectoryData()}});
+
+            _postsRepoMock.Setup(m => m.EditPost(editPost)).Returns(true);
+            PostController controller = new PostController(_postsRepoMock.Object, _loginUser, fakeFileSystem);
+
+            RequestContext rc = new RequestContext(contextMock.Object, new RouteData());
+            controller.ControllerContext = new ControllerContext(rc, controller);
+
+            JsonResult result = controller.EditPost(editPost, file.Object);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Data);
+            Assert.IsTrue(result.Data is JsonResponseVM);
+            Assert.IsTrue((result.Data as JsonResponseVM).Result == "OK");
+            Assert.IsTrue(!String.IsNullOrEmpty((result.Data as JsonResponseVM).Msg));
         }
 
         [TestMethod]

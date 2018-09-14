@@ -18,10 +18,9 @@ namespace NPP_UnitTests
         [TestMethod]
         public void Index()
         {
-            var result = _controller.Index();
+            ViewResult result = _controller.Index();
 
             Assert.IsNotNull(result);
-            Assert.IsTrue(result is ViewResult);
             Assert.IsTrue(result.ViewName == "");
             Assert.IsNull(result.Model);
             Assert.IsNotNull(_controller.ViewBag.VisibilityOptions);           

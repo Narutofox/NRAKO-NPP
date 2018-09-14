@@ -103,6 +103,9 @@
       <HintPath>packages\System.Diagnostics.DiagnosticSource.4.5.0\lib\net46\System.Diagnostics.DiagnosticSource.dll</HintPath>
     </Reference>
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Abstractions, Version=2.1.0.230, Culture=neutral, PublicKeyToken=96bf224d23c43e59, processorArchitecture=MSIL">
+      <HintPath>packages\System.IO.Abstractions.2.1.0.230\lib\net40\System.IO.Abstractions.dll</HintPath>
+    </Reference>
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
@@ -169,6 +172,7 @@
     <Compile Include="Filters\AdminOnlyFilter.cs" />
     <Compile Include="Filters\LoginControllerFilter.cs" />
     <Compile Include="Filters\LoginRequiredFilter.cs" />
+    <Compile Include="Filters\SignUpControllerFilter.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
