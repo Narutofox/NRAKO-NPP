@@ -17,9 +17,9 @@ namespace NRAKO_IvanCicek.Controllers
             _userDal = DALFactory.GetUserDAL();
         }
 
-        public SignUpController(Context context)
+        public SignUpController(IUserDAL userDal)
         {
-            _userDal = DALFactory.GetUserDAL(context);
+            _userDal = userDal;
         }
 
         // GET: SignUp
