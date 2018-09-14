@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Web;
+using System.Web.Hosting;
 
 namespace NRAKO_IvanCicek.Helpers
 {
     public class Logger
     {
-        private static Logger instance;
+        private static Logger _instance;
         private static object syncRoot = new Object();
 
         private Logger() { }
@@ -18,15 +16,15 @@ namespace NRAKO_IvanCicek.Helpers
         {
             get
             {
-                if (instance == null)
+                if (_instance == null)
                 {
                     lock (syncRoot)
                     {
-                       instance = new Logger();
+                       _instance = new Logger();
                     }
                 }
 
-                return instance;
+                return _instance;
             }
         }
 
@@ -34,7 +32,7 @@ namespace NRAKO_IvanCicek.Helpers
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("[ " + DateTime.Now + " ] ");
-            sb.Append(System.Environment.NewLine);
+            sb.Append(Environment.NewLine);
             sb.Append(text);
             SaveToFile(sb, path);
         }
@@ -43,15 +41,15 @@ namespace NRAKO_IvanCicek.Helpers
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("[ " + DateTime.Now + " ] ");
-            sb.Append(System.Environment.NewLine);
+            sb.Append(Environment.NewLine);
             sb.Append("InnerException: " + ex.InnerException);
-            sb.Append(System.Environment.NewLine);
+            sb.Append(Environment.NewLine);
             sb.Append("Source: " + ex.Source);
-            sb.Append(System.Environment.NewLine);
+            sb.Append(Environment.NewLine);
             sb.Append("Message: " + ex.Message);
-            sb.Append(System.Environment.NewLine);
+            sb.Append(Environment.NewLine);
             sb.Append("StackTrace: " + ex.StackTrace);
-            sb.Append(System.Environment.NewLine);
+            sb.Append(Environment.NewLine);
             SaveToFile(sb);
         }
 
@@ -60,24 +58,9 @@ namespace NRAKO_IvanCicek.Helpers
 
             if (!String.IsNullOrEmpty(path))
             {
-                if (File.Exists(System.Web.Hosting.HostingEnvironment.MapPath(path)) == false)
+                if (File.Exists(HostingEnvironment.MapPath(path)) == false)
                 {
-                    using (FileStream fs = File.Create(System.Web.Hosting.HostingEnvironment.MapPath(path)))
-                    {
-                        byte[] info = new UTF8Encoding(true).GetBytes(sb.ToString());
-                        fs.Write(info, 0, info.Length);
-                    };
-                }
-                else
-                {
-                    System.IO.File.AppendAllText(System.Web.Hosting.HostingEnvironment.MapPath(path), sb.ToString());
-                }
-            }
-            else
-            {
-                if (File.Exists(System.Web.Hosting.HostingEnvironment.MapPath("~/Content/Logs/ErrorLog.txt")) == false)
-                {
-                    using (FileStream fs = File.Create(System.Web.Hosting.HostingEnvironment.MapPath("~/Content/Logs/ErrorLog.txt")))
+                    using (FileStream fs = File.Create(HostingEnvironment.MapPath(path) ?? throw new InvalidOperationException()))
                     {
                         byte[] info = new UTF8Encoding(true).GetBytes(sb.ToString());
                         fs.Write(info, 0, info.Length);
@@ -85,7 +68,22 @@ namespace NRAKO_IvanCicek.Helpers
                 }
                 else
                 {
-                    System.IO.File.AppendAllText(System.Web.Hosting.HostingEnvironment.MapPath("~/Content/Logs/ErrorLog.txt"), sb.ToString());
+                    File.AppendAllText(HostingEnvironment.MapPath(path) ?? throw new InvalidOperationException(), sb.ToString());
+                }
+            }
+            else
+            {
+                if (File.Exists(HostingEnvironment.MapPath("~/Content/Logs/ErrorLog.txt")) == false)
+                {
+                    using (FileStream fs = File.Create(HostingEnvironment.MapPath("~/Content/Logs/ErrorLog.txt") ?? throw new InvalidOperationException()))
+                    {
+                        byte[] info = new UTF8Encoding(true).GetBytes(sb.ToString());
+                        fs.Write(info, 0, info.Length);
+                    }
+                }
+                else
+                {
+                    File.AppendAllText(HostingEnvironment.MapPath("~/Content/Logs/ErrorLog.txt") ?? throw new InvalidOperationException(), sb.ToString());
                 }
 
             }

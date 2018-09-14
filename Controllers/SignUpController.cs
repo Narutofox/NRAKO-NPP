@@ -14,7 +14,7 @@ namespace NRAKO_IvanCicek.Controllers
         readonly IUserDAL _userDal;
         public SignUpController()
         {
-            _userDal = DALFactory.GetUserDAL();
+            _userDal = DalFactory.GetUsersRepo();
         }
 
         public SignUpController(IUserDAL userDal)

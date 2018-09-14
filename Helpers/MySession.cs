@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+﻿using System.Web;
 
 namespace NRAKO_IvanCicek.Helpers
 { 
-    //TODO Proxy 
     public static class MySession
     {
         public static object Get(string key)

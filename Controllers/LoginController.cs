@@ -14,12 +14,12 @@ namespace NRAKO_IvanCicek.Controllers
         private readonly ILoginDAL _loginDal;
         public LoginController()
         {
-            _loginDal = DALFactory.GetLoginDAL();
+            _loginDal = DalFactory.GetLoginRepo();
         }
 
         public LoginController(Context context)
         {
-            _loginDal = DALFactory.GetLoginDAL(context);
+            _loginDal = DalFactory.GetLoginRepo(context);
         }
 
         // GET: Login

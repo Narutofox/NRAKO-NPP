@@ -23,14 +23,14 @@ namespace NRAKO_IvanCicek.Controllers
 
         public PostController()
         {
-            PostsRepo = DALFactory.GetPostDAL();
+            PostsRepo = DalFactory.GetPostsRepo();
             _loginUser = (LoginUser)MySession.Get("LoginUser");
             _fileSystem = new FileSystem();
         }
 
         public PostController(Context context, LoginUser loginUser)
         {
-            PostsRepo = DALFactory.GetPostDAL(context);
+            PostsRepo = DalFactory.GetPostsRepo(context);
             _loginUser = loginUser;
             _fileSystem = new FileSystem();
         }

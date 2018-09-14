@@ -8,19 +8,19 @@ using System.Web;
 
 namespace NRAKO_IvanCicek.Factories
 {
-    public static class DALFactory
+    public static class DalFactory
     {
-        public static IUserDAL GetUserDAL(Context context = null)
+        public static IUserDAL GetUsersRepo(Context context = null)
         {
-            return UsersDal.GetInstance(context);
+            return UsersRepo.GetInstance(context);
         }
 
-        public static ILoginDAL GetLoginDAL(Context context = null)
+        public static ILoginDAL GetLoginRepo(Context context = null)
         {
             return LoginRepo.GetInstance(context);
         }
 
-        public static IPostsRepo GetPostDAL(Context context = null)
+        public static IPostsRepo GetPostsRepo(Context context = null)
         {
             return PostsRepo.GetInstance(context);
         }

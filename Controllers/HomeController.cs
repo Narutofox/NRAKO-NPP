@@ -12,12 +12,12 @@ namespace NRAKO_IvanCicek.Controllers
         private readonly IPostsRepo _postsRepo;
         public HomeController()
         {
-            _postsRepo = DALFactory.GetPostDAL();
+            _postsRepo = DalFactory.GetPostsRepo();
         }
 
         public HomeController(Context context)
         {
-            _postsRepo = DALFactory.GetPostDAL(context);
+            _postsRepo = DalFactory.GetPostsRepo(context);
         }
         public ViewResult Index()
         {

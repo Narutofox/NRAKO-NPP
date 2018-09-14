@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 
 namespace NRAKO_IvanCicek.Helpers
 {
@@ -13,7 +10,7 @@ namespace NRAKO_IvanCicek.Helpers
             {
                 if (!String.IsNullOrEmpty(email))
                 {
-                    var Address = new System.Net.Mail.MailAddress(email);
+                    var mailAddress = new System.Net.Mail.MailAddress(email);
                     return true;
                 }
 

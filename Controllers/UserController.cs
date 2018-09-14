@@ -16,15 +16,15 @@ namespace NRAKO_IvanCicek.Controllers
         private readonly LoginUser _loginUser;
         public UserController()
         {
-            _postsRepo = DALFactory.GetPostDAL();
-            _usersDal = DALFactory.GetUserDAL();
+            _postsRepo = DalFactory.GetPostsRepo();
+            _usersDal = DalFactory.GetUsersRepo();
             _loginUser = (LoginUser)MySession.Get("LoginUser");
         }
 
         public UserController(Context context, LoginUser loginUser)
         {
-            _postsRepo = DALFactory.GetPostDAL(context);
-            _usersDal = DALFactory.GetUserDAL(context);
+            _postsRepo = DalFactory.GetPostsRepo(context);
+            _usersDal = DalFactory.GetUsersRepo(context);
             _loginUser = loginUser;
         }
 

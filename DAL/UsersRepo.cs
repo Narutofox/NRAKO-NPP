@@ -9,10 +9,10 @@ using System.Linq;
 
 namespace NRAKO_IvanCicek.DAL
 {
-    public class UsersDal : IUserDAL
+    public class UsersRepo : IUserDAL
     {
         private readonly Context _context;
-        private UsersDal(Context context = null)
+        private UsersRepo(Context context = null)
         {
             if (context != null)
             {
@@ -24,9 +24,9 @@ namespace NRAKO_IvanCicek.DAL
             }
         }
 
-        public static UsersDal GetInstance(Context context = null)
+        public static UsersRepo GetInstance(Context context = null)
         {
-            return new UsersDal(context);
+            return new UsersRepo(context);
         }
 
         private bool SaveChanges()

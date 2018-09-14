@@ -20,7 +20,7 @@ namespace NRAKO_IvanCicek.Controllers
         private readonly IFileSystem _fileSystem;
         public SettingsController()
         {
-            userDAL = DALFactory.GetUserDAL();
+            userDAL = DalFactory.GetUsersRepo();
             LoginUser = (LoginUser)MySession.Get("LoginUser");
         }
 

@@ -167,7 +167,7 @@
     <Compile Include="Controllers\UserController.cs" />
     <Compile Include="DAL\LoginRepo.cs" />
     <Compile Include="DAL\PostsRepo.cs" />
-    <Compile Include="DAL\UsersDAL.cs" />
+    <Compile Include="DAL\UsersRepo.cs" />
     <Compile Include="Factories\DALFactory.cs" />
     <Compile Include="Filters\AdminOnlyFilter.cs" />
     <Compile Include="Filters\LoginControllerFilter.cs" />
