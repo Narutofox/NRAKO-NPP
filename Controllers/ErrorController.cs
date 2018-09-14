@@ -5,7 +5,7 @@ namespace NRAKO_IvanCicek.Controllers
     public class ErrorController : Controller
     {
         // GET: Error
-        public ActionResult Index()
+        public ViewResult Index()
         {
             return View("Error");
         }

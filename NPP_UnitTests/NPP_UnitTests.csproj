@@ -120,6 +120,7 @@
     <Compile Include="SettingsControllerUnitTest.cs" />
     <Compile Include="SignUpControllerUnitTest.cs" />
     <Compile Include="PostControllerUnitTests.cs" />
+    <Compile Include="ErrorControllerUnitTests.cs" />
     <Compile Include="UserControllerUnitTest.cs" />
   </ItemGroup>
   <ItemGroup>
