@@ -24,7 +24,7 @@ namespace NRAKO_IvanCicek.Interfaces
         UserProfile SetAdditionalSettingsForProfile(UserProfile profile, int loginUserId);
         bool IsOnFriendList(int userId, int loginUserId);
         bool IsOnBlockList(int userId, int loginUserId);
-        bool SendFriendRequest(int userId1, int loginUserId);
+        bool SendFriendRequest(int userId, int loginUserId);
         bool RemoveFriend(int userId, int loginUserId);
         bool BlockUser(int userId, int loginUserId);
         bool UnblockUser(int userId, int loginUserId);

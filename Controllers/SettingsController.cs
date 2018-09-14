@@ -5,10 +5,8 @@ using NRAKO_IvanCicek.Interfaces;
 using NRAKO_IvanCicek.Models;
 using NRAKO_IvanCicek.Models.VM;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions;
-using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 
@@ -83,12 +81,12 @@ namespace NRAKO_IvanCicek.Controllers
             user.UserId = LoginUser.UserId;
             userSettings.IdUser = LoginUser.UserId;
 
-            bool Error = false;
+            bool error = false;
             
             if (profileImage != null)
             {
-               string FileType = Path.GetExtension(profileImage.FileName);
-                if (Helper.CheckImageTypeAllowed(FileType))
+               string fileType = Path.GetExtension(profileImage.FileName);
+                if (Helper.CheckImageTypeAllowed(fileType))
                 {
                     user.ProfileImagePath = "~/Content/UserProfileImages/" + LoginUser.UserId + "/" + profileImage.FileName;
                     string folderPath = Server.MapPath("~/Content/UserProfileImages/" + LoginUser.UserId);
@@ -101,11 +99,11 @@ namespace NRAKO_IvanCicek.Controllers
                 {
                     notification.Type = NotificationType.Error;
                     notification.Text = "Slika nije u dozvoljenom formatu";
-                    Error = true;
+                    error = true;
                 }
             }
 
-            if (Error == false)
+            if (error == false)
             {
                 if (userDAL.Update(user))
                 {

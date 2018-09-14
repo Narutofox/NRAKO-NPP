@@ -1,38 +1,37 @@
 ﻿using NRAKO_IvanCicek.Helpers;
 using NRAKO_IvanCicek.Interfaces;
 using NRAKO_IvanCicek.Models;
+using NRAKO_IvanCicek.Models.VM;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
-using System.Web;
-using NRAKO_IvanCicek.Models.VM;
 
 namespace NRAKO_IvanCicek.DAL
 {
-    public class UsersDAL : IUserDAL
+    public class UsersDal : IUserDAL
     {
-        Context Context;
-        private UsersDAL(Context context = null)
+        private readonly Context _context;
+        private UsersDal(Context context = null)
         {
             if (context != null)
             {
-                Context = context;
+                _context = context;
             }
             else
             {
-                Context = new Context();
+                _context = new Context();
             }
         }
 
-        public static UsersDAL GetInstance(Context context = null)
+        public static UsersDal GetInstance(Context context = null)
         {
-            return new UsersDAL(context);
+            return new UsersDal(context);
         }
 
         private bool SaveChanges()
         {
-            if (Context.SaveChanges() > 0)
+            if (_context.SaveChanges() > 0)
             {
                 return true;
             }
@@ -42,10 +41,10 @@ namespace NRAKO_IvanCicek.DAL
         public bool Create(User user)
         {
             user.RecordStatusId = (int)RecordStatus.Active;
-            Context.Users.Add(user);
-            Context.SaveChanges();
-            Context.UserSettings.Add(new UserSetting { IdUser = user.UserId, AllowFollowing = false, ShowEmail = false });
-            if (Context.SaveChanges() > 0)
+            _context.Users.Add(user);
+            _context.SaveChanges();
+            _context.UserSettings.Add(new UserSetting { IdUser = user.UserId, AllowFollowing = false, ShowEmail = false });
+            if (_context.SaveChanges() > 0)
             {
                 return true;
             }
@@ -54,16 +53,16 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool Update(User user)
         {
-            User DbUser = Get(user.UserId);
-            if (DbUser != null)
+            User dbUser = Get(user.UserId);
+            if (dbUser != null)
             {
                 // Ovdje se lozinka i Salt NE mijenja
-                user.Password = DbUser.Password;
-                user.Salt = DbUser.Salt;
+                user.Password = dbUser.Password;
+                user.Salt = dbUser.Salt;
                 // Ako je polje za putanju do slike profila prazno onda postavi onu vrijednost koja je u bazi
                 if (String.IsNullOrEmpty(user.ProfileImagePath))
                 {
-                    user.ProfileImagePath = DbUser.ProfileImagePath;
+                    user.ProfileImagePath = dbUser.ProfileImagePath;
                 }
 
                 if (user.RecordStatusId <= 0)
@@ -71,9 +70,9 @@ namespace NRAKO_IvanCicek.DAL
                     user.RecordStatusId = (int)RecordStatus.Active;
                 }
 
-                Context.Entry(DbUser).State = EntityState.Detached;
-                Context.Entry(user).State = EntityState.Modified;
-                if (Context.SaveChanges() > 0)
+                _context.Entry(dbUser).State = EntityState.Detached;
+                _context.Entry(user).State = EntityState.Modified;
+                if (_context.SaveChanges() > 0)
                 {
                     return true;
                 }
@@ -92,46 +91,48 @@ namespace NRAKO_IvanCicek.DAL
 
         public UserSetting GetUserSettings(int userId)
         {
-            return Context.UserSettings.Where(x => x.IdUser == userId).FirstOrDefault();
+            return _context.UserSettings.Where(x => x.IdUser == userId).FirstOrDefault();
         }
 
         public User Get(int userId)
         {
-            return Context.Users.Where(x => x.UserId == userId && x.RecordStatusId == (int)RecordStatus.Active).FirstOrDefault();
+            return _context.Users.FirstOrDefault(x => x.UserId == userId && x.RecordStatusId == (int)RecordStatus.Active);
         }
 
         public UserProfile GetProfileData(int userId)
         {
-            User user = Context.Users.Where(x => x.UserId == userId && x.RecordStatusId == (int)RecordStatus.Active).FirstOrDefault();
+            User user = _context.Users.FirstOrDefault(x => x.UserId == userId && x.RecordStatusId == (int)RecordStatus.Active);
 
             if (user != null)
             {
-                UserProfile Profile = new Models.UserProfile();
-                Profile.UserId = user.UserId;
-                Profile.FirstName = user.FirstName;
-                Profile.LastName = user.LastName;
-                Profile.ProfileImagePath = user.ProfileImagePath;
+                UserProfile profile = new UserProfile
+                {
+                    UserId = user.UserId,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    ProfileImagePath = user.ProfileImagePath
+                };
 
-                UserSetting Settings = GetUserSettings(userId);
+                UserSetting settings = GetUserSettings(userId);
 
-                Profile.AllowFollowing = Settings.AllowFollowing;
-                Profile.ShowEmail = Settings.AllowFollowing;
-                return Profile;
+                profile.AllowFollowing = settings.AllowFollowing;
+                profile.ShowEmail = settings.AllowFollowing;
+                return profile;
             }
             return null;
         }
 
         public bool UpdateUserSettings(UserSetting userSettings)
         {
-            UserSetting DBUserSettings = GetUserSettings(userSettings.IdUser);
+            UserSetting dbUserSettings = GetUserSettings(userSettings.IdUser);
 
-            if (DBUserSettings != null)
+            if (dbUserSettings != null)
             {
-                userSettings.UserSettingId = DBUserSettings.UserSettingId;
+                userSettings.UserSettingId = dbUserSettings.UserSettingId;
 
-                Context.Entry(DBUserSettings).State = EntityState.Detached;
-                Context.Entry(userSettings).State = EntityState.Modified;
-                if (Context.SaveChanges() > 0)
+                _context.Entry(dbUserSettings).State = EntityState.Detached;
+                _context.Entry(userSettings).State = EntityState.Modified;
+                if (_context.SaveChanges() > 0)
                 {
                     return true;
                 }
@@ -147,8 +148,8 @@ namespace NRAKO_IvanCicek.DAL
             {
                 dbUser.Salt = Hashing.GetSalt();
                 dbUser.Password = Hashing.Hash(changePassword.NewPassword, dbUser.Salt);
-                Context.Entry(dbUser).State = EntityState.Modified;
-                if (Context.SaveChanges() > 0)
+                _context.Entry(dbUser).State = EntityState.Modified;
+                if (_context.SaveChanges() > 0)
                 {
                     return true;
                 }
@@ -158,25 +159,23 @@ namespace NRAKO_IvanCicek.DAL
 
         public IEnumerable<UserProfile> Search(string fullName)
         {
-            String FullName = fullName.ToLower();
-            return Context.Users.Where(x => (x.FirstName + " " + x.LastName).ToLower().Contains(FullName) && x.RecordStatusId == (int)RecordStatus.Active)
+            String fullNameLower = fullName.ToLower();
+            return _context.Users.Where(x => (x.FirstName + " " + x.LastName).ToLower().Contains(fullNameLower) && x.RecordStatusId == (int)RecordStatus.Active)
                     .Select(x => new UserProfile { FirstName = x.FirstName, LastName = x.LastName, UserId = x.UserId });
         }
 
         public UserProfile SetAdditionalSettingsForProfile(UserProfile profile, int loginUserId)
         {
-            UserFriend Friend = Context.UserFriends.Where(x =>
+            UserFriend friend = _context.UserFriends.FirstOrDefault(x =>
                                 (x.IdUser == profile.UserId && x.IdUserToFriendList == loginUserId) ||
-                                (x.IdUser == loginUserId && x.IdUserToFriendList == profile.UserId))
-                                .FirstOrDefault();
-            UserBlacklist BlackList = Context.UserBlacklists.Where(x =>
+                                (x.IdUser == loginUserId && x.IdUserToFriendList == profile.UserId)) ;
+            UserBlacklist blackList = _context.UserBlacklists.FirstOrDefault(x =>
                                 (x.IdUser == profile.UserId && x.IdUserToBlackList == loginUserId) ||
-                                (x.IdUser == loginUserId && x.IdUserToBlackList == profile.UserId))
-                                .FirstOrDefault();
+                                (x.IdUser == loginUserId && x.IdUserToBlackList == profile.UserId));
 
-            if (Friend != null)
+            if (friend != null)
             {
-                if (Friend.RequestAccepted)
+                if (friend.RequestAccepted)
                 {
                     profile.AreFriends = true;
                 }
@@ -186,12 +185,12 @@ namespace NRAKO_IvanCicek.DAL
                 }
             }
 
-            if (BlackList != null)
+            if (blackList != null)
             {
                  profile.IsBlocked = false;
             }
 
-            if (Context.UsersFollowings.Any(x=>x.IdUser == loginUserId && x.IdUserToFollow == profile.UserId))
+            if (_context.UsersFollowings.Any(x=>x.IdUser == loginUserId && x.IdUserToFollow == profile.UserId))
             {
                 profile.IsFollowing = true;
             }
@@ -201,14 +200,14 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool IsOnFriendList(int userId, int loginUserId)
         {
-            return Context.UserFriends.Any(x =>
+            return _context.UserFriends.Any(x =>
                                 (x.IdUser == userId && x.IdUserToFriendList == loginUserId) ||
                                 (x.IdUser == loginUserId && x.IdUserToFriendList == userId));
         }
 
         public bool IsOnBlockList(int userId, int loginUserId)
         {
-            bool isOnBlockList = Context.UserBlacklists.Any(x =>
+            bool isOnBlockList = _context.UserBlacklists.Any(x =>
                                 (x.IdUser == userId && x.IdUserToBlackList == loginUserId) ||
                                 (x.IdUser == loginUserId && x.IdUserToBlackList == userId));
             return isOnBlockList;
@@ -216,7 +215,7 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool SendFriendRequest(int userId, int loginUserId)
         {
-            Context.UserFriends.Add(new UserFriend { IdUser = loginUserId, IdUserToFriendList = userId, RequestAccepted = false });
+            _context.UserFriends.Add(new UserFriend { IdUser = loginUserId, IdUserToFriendList = userId, RequestAccepted = false });
             return SaveChanges();
         }
 
@@ -224,32 +223,32 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool RemoveFriend(int userId, int loginUserId)
         {
-            Context.UserFriends.Remove(Context.UserFriends.FirstOrDefault(x=>x.IdUser == loginUserId && x.IdUserToFriendList == userId || x.IdUser == userId && x.IdUserToFriendList == loginUserId));
+            _context.UserFriends.Remove(_context.UserFriends.Single(x=>x.IdUser == loginUserId && x.IdUserToFriendList == userId || x.IdUser == userId && x.IdUserToFriendList == loginUserId));
             return SaveChanges();
         }
 
         public bool BlockUser(int userId, int loginUserId)
         {
-            Context.UserBlacklists.Add(new UserBlacklist { IdUser = loginUserId, IdUserToBlackList = userId });
+            _context.UserBlacklists.Add(new UserBlacklist { IdUser = loginUserId, IdUserToBlackList = userId });
             return SaveChanges();
         }
 
         public bool UnblockUser(int userId, int loginUserId)
         {
-            Context.UserBlacklists.Remove(Context.UserBlacklists.First(x => x.IdUser == loginUserId && x.IdUserToBlackList == userId || x.IdUser == userId && x.IdUserToBlackList == loginUserId));
+            _context.UserBlacklists.Remove(_context.UserBlacklists.First(x => x.IdUser == loginUserId && x.IdUserToBlackList == userId || x.IdUser == userId && x.IdUserToBlackList == loginUserId));
             return SaveChanges();
         }
 
         public bool FollowUser(int userId, int loginUserId)
         {
-            Context.UsersFollowings.Add(new UserFollow { IdUser = loginUserId, IdUserToFollow = userId });
+            _context.UsersFollowings.Add(new UserFollow { IdUser = loginUserId, IdUserToFollow = userId });
             return SaveChanges();
         }
 
         public bool CanFollow(int userId, int loginUserId)
         {
-            bool allowFollowing = Context.UserSettings.First(x => x.IdUser == userId).AllowFollowing;
-            if (IsOnBlockList(userId,loginUserId) == false && allowFollowing && IsFollowing(userId, loginUserId) == false)
+            bool allowFollowing = _context.UserSettings.First(x => x.IdUser == userId).AllowFollowing;
+            if (!IsOnBlockList(userId, loginUserId) && allowFollowing && !IsFollowing(userId, loginUserId))
             {
                 return true;
             }
@@ -259,7 +258,7 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool IsFollowing(int userId, int loginUserId)
         {
-            bool isFollowing = Context.UsersFollowings.Any(x =>
+            bool isFollowing = _context.UsersFollowings.Any(x =>
                                  (x.IdUser == userId && x.IdUserToFollow == loginUserId) ||
                                  (x.IdUser == loginUserId && x.IdUserToFollow == userId));
             return isFollowing;
@@ -267,21 +266,21 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool StopFollowingUser(int userId, int loginUserId)
         {
-            Context.UsersFollowings.Remove(Context.UsersFollowings.FirstOrDefault(x => x.IdUser == loginUserId && x.IdUserToFollow == userId || x.IdUser == userId && x.IdUserToFollow == loginUserId));
+            _context.UsersFollowings.Remove(_context.UsersFollowings.Single(x => x.IdUser == loginUserId && x.IdUserToFollow == userId || x.IdUser == userId && x.IdUserToFollow == loginUserId));
             return SaveChanges();
         }
 
         public IEnumerable<UserFriend> GetFriends(int userId)
         {
-            List<UserFriend> UserFriends = new List<UserFriend>();
+            List<UserFriend> userFriends = new List<UserFriend>();
 
-           var List = (from uf in Context.UserFriends
-             join Sender in Context.Users on uf.IdUser equals Sender.UserId
-             join Reciver in Context.Users on uf.IdUserToFriendList equals Reciver.UserId
-             where (uf.IdUser == userId || uf.IdUserToFriendList == userId) && Sender.RecordStatusId == (int)RecordStatus.Active && Reciver.RecordStatusId == (int)RecordStatus.Active
-             select new { UserFriend = uf, UserSender = Sender, UserReciver = Reciver }).ToList();
+           var list = (from uf in _context.UserFriends
+             join sender in _context.Users on uf.IdUser equals sender.UserId
+             join reciver in _context.Users on uf.IdUserToFriendList equals reciver.UserId
+             where (uf.IdUser == userId || uf.IdUserToFriendList == userId) && sender.RecordStatusId == (int)RecordStatus.Active && reciver.RecordStatusId == (int)RecordStatus.Active
+             select new { UserFriend = uf, UserSender = sender, UserReciver = reciver }).ToList();
 
-            foreach (var item in List)
+            foreach (var item in list)
             {
                 if (item.UserSender.UserId != userId)
                 {
@@ -292,19 +291,20 @@ namespace NRAKO_IvanCicek.DAL
                     item.UserFriend.Friend = item.UserReciver;
                     item.UserFriend.RequestSent = true;
                 }
-                UserFriends.Add(item.UserFriend);
+                userFriends.Add(item.UserFriend);
             }
 
-            return UserFriends;
+            return userFriends;
         }
 
         public bool ConfirmFriendRequest(int userFriendId, int userId)
         {
-            UserFriend ConfirmFriendRequest = Context.UserFriends.FirstOrDefault(x=>x.UserFriendId == userFriendId && x.RequestAccepted == false);
-            if (ConfirmFriendRequest != null && ConfirmFriendRequest.IdUserToFriendList == userId)
+            UserFriend confirmFriendRequest = _context.UserFriends.FirstOrDefault(x=>
+                x.UserFriendId == userFriendId && !x.RequestAccepted);
+            if (confirmFriendRequest != null && confirmFriendRequest.IdUserToFriendList == userId)
             {
-                ConfirmFriendRequest.RequestAccepted = true;
-                Context.Entry(ConfirmFriendRequest).State = EntityState.Modified;
+                confirmFriendRequest.RequestAccepted = true;
+                _context.Entry(confirmFriendRequest).State = EntityState.Modified;
                 return SaveChanges();
             }
             return false;
@@ -312,10 +312,11 @@ namespace NRAKO_IvanCicek.DAL
 
         public bool DenyFriendRequest(int userFriendId, int userId)
         {
-            UserFriend ConfirmFriendRequest = Context.UserFriends.FirstOrDefault(x => x.UserFriendId == userFriendId && x.RequestAccepted == false);
-            if (ConfirmFriendRequest != null && ConfirmFriendRequest.IdUserToFriendList == userId)
+            UserFriend confirmFriendRequest = _context.UserFriends.FirstOrDefault(x => 
+                x.UserFriendId == userFriendId && !x.RequestAccepted);
+            if (confirmFriendRequest != null && confirmFriendRequest.IdUserToFriendList == userId)
             {
-                Context.UserFriends.Remove(ConfirmFriendRequest);
+                _context.UserFriends.Remove(confirmFriendRequest);
                 return SaveChanges();
             }
             return false;

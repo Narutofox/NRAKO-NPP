@@ -12,12 +12,12 @@ namespace NRAKO_IvanCicek.Factories
     {
         public static IUserDAL GetUserDAL(Context context = null)
         {
-            return UsersDAL.GetInstance(context);
+            return UsersDal.GetInstance(context);
         }
 
         public static ILoginDAL GetLoginDAL(Context context = null)
         {
-            return LoginDAL.GetInstance(context);
+            return LoginDal.GetInstance(context);
         }
 
         public static IPostsRepo GetPostDAL(Context context = null)
