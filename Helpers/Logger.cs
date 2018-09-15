@@ -8,7 +8,7 @@ namespace NRAKO_IvanCicek.Helpers
     public class Logger
     {
         private static Logger _instance;
-        private static object syncRoot = new Object();
+        private static readonly object SyncRoot = new Object();
 
         private Logger() { }
 
@@ -18,7 +18,7 @@ namespace NRAKO_IvanCicek.Helpers
             {
                 if (_instance == null)
                 {
-                    lock (syncRoot)
+                    lock (SyncRoot)
                     {
                        _instance = new Logger();
                     }
