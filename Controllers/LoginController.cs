@@ -17,9 +17,9 @@ namespace NRAKO_IvanCicek.Controllers
             _loginDal = DalFactory.GetLoginRepo();
         }
 
-        public LoginController(Context context)
+        public LoginController(ILoginDAL loginDal)
         {
-            _loginDal = DalFactory.GetLoginRepo(context);
+            _loginDal = loginDal;
         }
 
         // GET: Login

@@ -1,30 +1,33 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NRAKO_IvanCicek.Controllers;
 using NRAKO_IvanCicek.Models.VM;
 using System.Web.Mvc;
-using System.Web.Routing;
-using NRAKO_IvanCicek.Factories;
+using Moq;
+using NRAKO_IvanCicek.Helpers;
+using NRAKO_IvanCicek.Interfaces;
 using NRAKO_IvanCicek.Models;
-using System.Data.SqlClient;
 
 namespace NPP_UnitTests
 {
     [TestClass]
     public class LoginControllerUnitTest
     {
-        private LoginController _controller;
+        private Mock<ILoginDAL> _loginRepoMock;
+
         [TestInitialize]
         public void Initialize()
         {
-            _controller = new LoginController(Helper.GetContext());           
+            _loginRepoMock = new Mock<ILoginDAL>();
         }
 
         [TestMethod]
         public void Index()
         {
-            ViewResult result = _controller.Index();
+            LoginController controller = new LoginController(_loginRepoMock.Object);
+
+            ViewResult result = controller.Index();
             Assert.IsNotNull(result);
-            Assert.IsTrue(result is ViewResult);
             Assert.IsTrue(result.ViewName == "");
         }
 
@@ -32,17 +35,10 @@ namespace NPP_UnitTests
         public void Login()
         {
             Login login = new Login();
+            LoginController controller = new LoginController(_loginRepoMock.Object);
+            _loginRepoMock.Setup(x => x.LoginCheck(login)).Returns(new LoginUser());
 
-            ActionResult result = _controller.Login(login);
-            Assert.IsNotNull(result);
-            Assert.IsTrue(result is ViewResult);
-            Assert.IsTrue((result as ViewResult).ViewName == "Index");
-            Assert.IsTrue((result as ViewResult).Model is Login);
-            Assert.IsTrue(_controller.TempData.ContainsKey("notification"));
-
-            login.Email = "test2@nrako.com";
-            login.Password = "1";
-            result = _controller.Login(login);
+            ActionResult result = controller.Login(login);
             Assert.IsNotNull(result);
             Assert.IsTrue(result is RedirectToRouteResult);
             Assert.IsTrue((result as RedirectToRouteResult).RouteValues.ContainsKey("action"));
@@ -52,10 +48,29 @@ namespace NPP_UnitTests
         }
 
         [TestMethod]
+        public void Login_Failed()
+        {
+            Login login = new Login();
+            LoginController controller = new LoginController(_loginRepoMock.Object);
+            _loginRepoMock.Setup(x => x.LoginCheck(login)).Returns((LoginUser)null);
+
+            ActionResult result = controller.Login(login);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result is ViewResult);
+            Assert.IsTrue((result as ViewResult).ViewName == "Index");
+            Assert.IsTrue((result as ViewResult).Model is Login);
+            Assert.IsTrue(controller.TempData.ContainsKey("notification"));
+            Assert.IsTrue(controller.TempData["notification"] is Notification);
+            Assert.IsTrue((controller.TempData["notification"] as Notification).Type == NotificationType.Error);
+            Assert.IsTrue(!String.IsNullOrEmpty((controller.TempData["notification"] as Notification).Text));
+        }
+
+        [TestMethod]
         public void Logoff()
         {
-            ActionResult result = _controller.Logoff();
-            Assert.IsTrue(_controller.TempData.ContainsKey("notification"));
+            LoginController controller = new LoginController(_loginRepoMock.Object);
+            ActionResult result = controller.Logoff();
+            Assert.IsTrue(controller.TempData.ContainsKey("notification"));
             Assert.IsNotNull(result);
             Assert.IsTrue(result is RedirectToRouteResult);
             Assert.IsTrue((result as RedirectToRouteResult).RouteValues.ContainsKey("action"));
