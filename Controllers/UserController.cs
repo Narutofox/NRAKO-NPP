@@ -21,13 +21,6 @@ namespace NRAKO_IvanCicek.Controllers
             _loginUser = (LoginUser)MySession.Get("LoginUser");
         }
 
-        public UserController(Context context, LoginUser loginUser)
-        {
-            _postsRepo = DalFactory.GetPostsRepo(context);
-            _usersDal = DalFactory.GetUsersRepo(context);
-            _loginUser = loginUser;
-        }
-
         public UserController(IPostsRepo postsRepo,IUserDAL userRepo, LoginUser loginUser)
         {
             _postsRepo = postsRepo;

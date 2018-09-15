@@ -2,6 +2,7 @@
 using Moq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Web.Mvc;
 using NRAKO_IvanCicek.Controllers;
 using NRAKO_IvanCicek.Interfaces;
@@ -13,7 +14,6 @@ namespace NPP_UnitTests
     [TestClass]
     public class UserControllerUnitTest
     {
-        private UserController _controller;
         private LoginUser _loginUser;
         private Mock<IUserDAL> _userRepoMock;
         private Mock<IPostsRepo> _postsRepoMock;
@@ -22,33 +22,37 @@ namespace NPP_UnitTests
         public void Initialize()
         {
             _loginUser = Helper.GetLoginUser();
-            _controller = new UserController(Helper.GetContext(), _loginUser);
             _userRepoMock = new Mock<IUserDAL>();
             _postsRepoMock = new Mock<IPostsRepo>();
+            _postsRepoMock.Setup(m => m.GetVisibilityOptions()).Returns(new List<EnumVM>().AsEnumerable());
         }
 
         [TestMethod]
         public void Index()
         {
-            ActionResult result = _controller.Index();
+            int id = -5;
+            _userRepoMock.Setup(m => m.GetProfileData(id)).Returns(new UserProfile());
+            _userRepoMock.Setup(m => m.SetAdditionalSettingsForProfile(It.IsAny<UserProfile>(),_loginUser.UserId)).Returns(new UserProfile());
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
+            ActionResult result = controller.Index(id);
 
             Assert.IsNotNull(result);
             Assert.IsTrue(result is ViewResult);
             Assert.IsTrue((result as ViewResult).ViewName == "");
             Assert.IsNotNull((result as ViewResult).Model);
             Assert.IsTrue((result as ViewResult).Model is UserProfile);
-            Assert.IsNotNull(_controller.ViewBag.VisibilityOptions);
+            Assert.IsNotNull(controller.ViewBag.VisibilityOptions);
+            Assert.IsTrue(controller.ViewBag.VisibilityOptions is IEnumerable<EnumVM>);
+        }
 
-            result = _controller.Index(2);
 
-            Assert.IsNotNull(result);
-            Assert.IsTrue(result is ViewResult);
-            Assert.IsTrue((result as ViewResult).ViewName == "");
-            Assert.IsNotNull((result as ViewResult).Model);
-            Assert.IsTrue((result as ViewResult).Model is UserProfile);
-            Assert.IsNotNull(_controller.ViewBag.VisibilityOptions);
-
-            result = _controller.Index(-5);
+        [TestMethod]
+        public void Index_UserDoesNotExist()
+        {
+            int id = -5;
+            _userRepoMock.Setup(m => m.GetProfileData(id)).Returns((UserProfile)null);
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
+            ActionResult result = controller.Index(id);
 
             Assert.IsNotNull(result);
             Assert.IsTrue(result is RedirectToRouteResult);
@@ -56,13 +60,15 @@ namespace NPP_UnitTests
             Assert.IsTrue((result as RedirectToRouteResult).RouteValues.ContainsKey("controller"));
             Assert.IsTrue((result as RedirectToRouteResult).RouteValues["action"].ToString() == "Index");
             Assert.IsTrue((result as RedirectToRouteResult).RouteValues["controller"].ToString() == "Home");
-            Assert.IsNotNull(_controller.ViewBag.VisibilityOptions);
         }
 
         [TestMethod]
         public void UserSearch()
         {
-            JsonResult result = _controller.UserSearch("Ivan");
+            string search = "Ivan";
+            _userRepoMock.Setup(m => m.Search(search)).Returns(new List<UserProfile>().AsEnumerable());
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
+            JsonResult result = controller.UserSearch(search);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Data is IEnumerable<UserProfile>);
         }
@@ -418,7 +424,9 @@ namespace NPP_UnitTests
 		[TestMethod]
         public void Friends()
         {
-			ViewResult result = _controller.Friends();
+            _userRepoMock.Setup(m => m.GetFriends(_loginUser.UserId)).Returns(new List<UserFriend>().AsEnumerable());
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
+            ViewResult result = controller.Friends();
             Assert.IsNotNull(result);
             Assert.IsTrue(result.ViewName == "");
             Assert.IsNotNull(result.Model);
@@ -428,7 +436,9 @@ namespace NPP_UnitTests
 		[TestMethod]
         public void AdminPanel()
         {
-			ViewResult result = _controller.AdminPanel();
+            _postsRepoMock.Setup(m => m.GetUnverifiedPosts()).Returns(new List<UserPost>().AsEnumerable());
+            UserController controller = new UserController(_postsRepoMock.Object, _userRepoMock.Object, _loginUser);
+            ViewResult result = controller.AdminPanel();
             Assert.IsNotNull(result);
             Assert.IsTrue(result.ViewName == "");
             Assert.IsNotNull(result.Model);
